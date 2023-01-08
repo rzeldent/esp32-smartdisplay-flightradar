@@ -4,10 +4,12 @@
 #include <ArduinoOTA.h>
 
 #include <esp32_smartdisplay.h>
-//#include <ReactiveArduinoLib.h>
+#include <ReactiveArduinoLib.h>
 
 #include <screen_connecting.h>
 #include <screen_settings.h>
+
+auto timer = Reactive::IntervalMillis(500);
 
 enum
 {
