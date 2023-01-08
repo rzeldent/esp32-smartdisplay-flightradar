@@ -1,5 +1,5 @@
 #include <esp32-hal-log.h>
-#include <access_poins_info.h>
+#include <access_points_info.h>
 #include <iterator>
 
 std::string wifi_ap_record::ssid_string() const
@@ -7,9 +7,10 @@ std::string wifi_ap_record::ssid_string() const
     return std::string((const char *)ssid, sizeof(ssid));
 }
 
-access_poins_info::access_poins_info()
+void access_points_info::refresh()
 {
     log_i("Scanning for networks");
+    clear();
     auto scan_count = WiFi.scanNetworks();
     if (scan_count == 0)
     {
