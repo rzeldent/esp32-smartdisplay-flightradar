@@ -4,6 +4,7 @@
 #include <ArduinoOTA.h>
 
 #include <esp32_smartdisplay.h>
+//#include <ReactiveArduinoLib.h>
 
 #include <screen_connecting.h>
 #include <screen_settings.h>
@@ -19,26 +20,6 @@ enum
 
 std::unique_ptr<screen> screen;
 
-void WiFiStationEventCallback(WiFiEvent_t event, WiFiEventInfo_t info)
-{
-  auto sc = static_cast<screen_connecting *>(screen.get());
-  switch (event)
-  {
-  case ARDUINO_EVENT_WIFI_READY:
-    sc->set_status("Ready");
-    break;
-  case ARDUINO_EVENT_WIFI_STA_START:
-    sc->set_status("Start");
-    break;
-  case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-    sc->set_status("Connected");
-    break;
-  case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-    sc->set_status("Disconnected");
-    break;
-  }
-}
-
 void setup()
 {
   // put your setup code here, to run once:
@@ -52,22 +33,11 @@ void setup()
   // Clear screen
   //  lv_obj_clean(lv_scr_act());
 
-  wifi_config_t config;
-  if (esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &config) == ESP_OK)
-  {
-    log_i("WiFi configuration found");
-    auto ssid = std::string(reinterpret_cast<char const *>(config.sta.ssid), sizeof(config.sta.ssid));
-    screen.reset(new screen_connecting(ssid));
-    WiFi.begin();
-  }
+  if (WiFi.begin() != WL_CONNECT_FAILED)
+    screen.reset(new screen_connecting());
   else
-  {
-    log_i("No WiFi configuration found");
     screen.reset(new screen_settings());
-  }
 
-  WiFi.onEvent(WiFiStationEventCallback);
-  
   // Allow over the air updates
   ArduinoOTA.begin();
 

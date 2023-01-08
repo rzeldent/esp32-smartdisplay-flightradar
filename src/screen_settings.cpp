@@ -43,8 +43,8 @@ screen_settings::screen_settings()
     lv_obj_set_grid_dsc_array(screen_, col_dsc, row_dsc);
 
     auto title = lv_label_create(screen_);
-    lv_label_set_text(title, "Available Access points");
     lv_obj_set_grid_cell(title, LV_GRID_ALIGN_CENTER, 0, 2, LV_GRID_ALIGN_START, 0, 1);
+    lv_label_set_text(title, "Available Access points");
 
     wifi_list_ = lv_list_create(screen_);
     lv_obj_set_grid_cell(wifi_list_, LV_GRID_ALIGN_STRETCH, 0, 2, LV_GRID_ALIGN_STRETCH, 1, 1);
