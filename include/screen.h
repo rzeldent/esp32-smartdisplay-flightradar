@@ -2,14 +2,14 @@
 
 #include <lvgl.h>
 
-class screen {
- public:
+class screen
+{
+public:
   screen();
-  ~screen();
 
-  const uint16_t screen_height() const;
-  const uint16_t screen_width() const;
+  static const uint16_t screen_height();
+  static const uint16_t screen_width();
 
- protected:
-  lv_obj_t *screen_;
+protected:
+  static lv_obj_t *_screen;
 };

@@ -10,6 +10,6 @@ struct wifi_ap_record : wifi_ap_record_t {
 };
 
 class access_points_info : public std::vector<wifi_ap_record> {
- public:
+public:
   void refresh();
 };

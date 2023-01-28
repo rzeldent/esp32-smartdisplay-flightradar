@@ -8,6 +8,7 @@ std::string wifi_ap_record::ssid_string() const {
 }
 
 void access_points_info::refresh() {
+  /*
   log_i("Scanning for networks");
   clear();
   auto scan_count = WiFi.scanNetworks();
@@ -32,4 +33,5 @@ void access_points_info::refresh() {
 
   // Sort descending on signal strength
   std::sort(begin(), end(), [](const wifi_ap_record &first, const wifi_ap_record &second) { return first.rssi > second.rssi; });
+  */
 }
