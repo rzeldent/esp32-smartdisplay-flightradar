@@ -2,91 +2,94 @@
 #include <esp_wifi.h>
 #include <screen_connecting.h>
 
-lv_obj_t *screen_connecting::info_;
-lv_obj_t *screen_connecting::ip_;
+lv_obj_t *screen_connecting::_info;
+lv_obj_t *screen_connecting::_ip;
 
-void screen_connecting::wifi_station_event_callback(WiFiEvent_t event, WiFiEventInfo_t info) {
-  switch (event) {
-    case ARDUINO_EVENT_WIFI_READY:
-      lv_label_set_text(info_, "WiFi Ready");
-      break;
-    case ARDUINO_EVENT_WIFI_SCAN_DONE:
-      lv_label_set_text(info_, "Scan Done");
-      break;
-    case ARDUINO_EVENT_WIFI_STA_START:
-      lv_label_set_text(info_, "Start");
-      break;
-    case ARDUINO_EVENT_WIFI_STA_STOP:
-      lv_label_set_text(info_, "Stop");
-      break;
-    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-      lv_label_set_text(info_, "Connected");
-      break;
-    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      lv_label_set_text(info_, "Disconnected");
-      break;
-    case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE:
-      lv_label_set_text(info_, "Authentication mode change");
-      break;
-    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      lv_label_set_text(info_, "Got IP Address");
-      lv_label_set_text(ip_, WiFi.localIP().toString().c_str());
-      break;
-    case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-      lv_label_set_text(info_, "Got IP Address");
-      lv_label_set_text(ip_, WiFi.localIPv6().toString().c_str());
-      break;
-    case ARDUINO_EVENT_WIFI_STA_LOST_IP:
-      lv_label_set_text(info_, "Lost IP Address");
-      lv_label_set_text(ip_, "");
-      break;
+void screen_connecting::OnNext(wl_status_t status)
+{
+  log_i("wl_status: %d", status);
+  switch (status)
+  {
+  case ARDUINO_EVENT_WIFI_READY:
+    lv_label_set_text(_info, "WiFi ready");
+    break;
+  case ARDUINO_EVENT_WIFI_SCAN_DONE:
+    lv_label_set_text(_info, "Scan done");
+    break;
+  case ARDUINO_EVENT_WIFI_STA_START:
+    lv_label_set_text(_info, "Start");
+    break;
+  case ARDUINO_EVENT_WIFI_STA_STOP:
+    lv_label_set_text(_info, "Stop");
+    break;
+  case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+    lv_label_set_text(_info, "Connected");
+    break;
+  case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+    lv_label_set_text(_info, "Disconnected");
+    break;
+  case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE:
+    lv_label_set_text(_info, "Authentication mode change");
+    break;
+  case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+    lv_label_set_text(_info, "Got IP address");
+    lv_label_set_text(_ip, WiFi.localIP().toString().c_str());
+    break;
+  case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
+    lv_label_set_text(_info, "Got IP address");
+    lv_label_set_text(_ip, WiFi.localIPv6().toString().c_str());
+    break;
+  case ARDUINO_EVENT_WIFI_STA_LOST_IP:
+    lv_label_set_text(_info, "Lost IP address");
+    lv_label_set_text(_ip, "");
+    break;
   }
 }
 
-void screen_connecting::OnNext(wl_status_t value) {
-  log_w("OnNext %d", value);
+void screen_connecting::OnComplete()
+{
 }
 
-void screen_connecting::OnComplete() {
-}
-
-screen_connecting::screen_connecting(ObservableProperty<wl_status_t> &observable_wifi_status) {
+screen_connecting::screen_connecting(ObservableProperty<wl_status_t> *observable_wifi_status)
+{
+  log_i("screen_connecting::screen_connecting");
   observable_wifi_status_ = observable_wifi_status;
 
-  static const lv_coord_t col_dsc[] = {240, LV_GRID_TEMPLATE_LAST};                  // 240
-  static const lv_coord_t row_dsc[] = {20, 20, 240, 20, 20, LV_GRID_TEMPLATE_LAST};  // 320
-  lv_obj_set_grid_dsc_array(screen_, col_dsc, row_dsc);
+  static const lv_coord_t col_dsc[] = {240, LV_GRID_TEMPLATE_LAST};                 // 240
+  static const lv_coord_t row_dsc[] = {20, 20, 240, 20, 20, LV_GRID_TEMPLATE_LAST}; // 320
+  lv_obj_set_grid_dsc_array(_screen, col_dsc, row_dsc);
 
   wifi_config_t config;
   auto ssid = esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &config) == ESP_OK ? std::string(reinterpret_cast<char const *>(config.sta.ssid), sizeof(config.sta.ssid)) : std::string("");
 
-  auto title = lv_label_create(screen_);
+  auto title = lv_label_create(_screen);
   lv_obj_set_grid_cell(title, LV_GRID_ALIGN_CENTER, 0, 1, LV_GRID_ALIGN_START, 0, 1);
   lv_label_set_text(title, "Connecting to access point");
 
-  auto title_ssid = lv_label_create(screen_);
+  auto title_ssid = lv_label_create(_screen);
   lv_obj_set_grid_cell(title_ssid, LV_GRID_ALIGN_CENTER, 0, 1, LV_GRID_ALIGN_START, 1, 1);
   lv_label_set_text(title_ssid, ssid.c_str());
 
-  auto spinner = lv_spinner_create(screen_, 1000, 30);
+  auto spinner = lv_spinner_create(_screen, 1000, 30);
   lv_obj_set_grid_cell(spinner, LV_GRID_ALIGN_CENTER, 0, 1, LV_GRID_ALIGN_CENTER, 2, 1);
   lv_obj_center(spinner);
 
-  info_ = lv_label_create(screen_);
-  lv_obj_set_grid_cell(info_, LV_GRID_ALIGN_CENTER, 0, 1, LV_GRID_ALIGN_START, 3, 1);
-  lv_label_set_text(info_, "Initializing");
+  _info = lv_label_create(_screen);
+  lv_obj_set_grid_cell(_info, LV_GRID_ALIGN_CENTER, 0, 1, LV_GRID_ALIGN_START, 3, 1);
+  lv_label_set_text(_info, "Initializing");
 
-  ip_ = lv_label_create(screen_);
-  lv_obj_set_grid_cell(ip_, LV_GRID_ALIGN_CENTER, 0, 1, LV_GRID_ALIGN_START, 4, 1);
-  lv_label_set_text(ip_, "");
+  _ip = lv_label_create(_screen);
+  lv_obj_set_grid_cell(_ip, LV_GRID_ALIGN_CENTER, 0, 1, LV_GRID_ALIGN_START, 4, 1);
+  lv_label_set_text(_ip, "");
 
-  observable_wifi_status.Subscribe(*this);
-  // wifi_event_id_ = WiFi.onEvent(wifi_station_event_callback);
+  observable_wifi_status->Subscribe(*this);
 }
 
-screen_connecting::~screen_connecting() {
-  observable_wifi_status_.Finish();
-  // WiFi.removeEvent(wifi_event_id_);
-  info_ = nullptr;
-  ip_ = nullptr;
+screen_connecting::~screen_connecting()
+{
+  log_i("screen_connecting::~screen_connecting");
+  observable_wifi_status_->UnSubscribe(*this);
+
+  _info = nullptr;
+  _ip = nullptr;
 }
