@@ -1,15 +1,18 @@
 #pragma once
 
 #include <lvgl.h>
+#include <mutex>
 
 class screen
 {
 public:
   screen();
+  virtual ~screen();
 
-  static const uint16_t screen_height();
-  static const uint16_t screen_width();
+  const uint16_t screen_height();
+  const uint16_t screen_width();
 
+  static std::mutex _mutex;
 protected:
-  static lv_obj_t *_screen;
+  lv_obj_t *_screen;
 };

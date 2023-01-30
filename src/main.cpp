@@ -8,17 +8,17 @@ using namespace Reactive;
 
 #include <screen_connecting.h>
 #include <screen_settings.h>
+#include <screen_main.h>
 
 typedef enum : byte
 {
   state_disconnected,
   state_connecting,
-  state_connect_failed,
   state_configure,
-  state_ready
+  state_main
 } main_state;
 
-const char *main_state_string[] = {"Disconnected", "Connecting", "Connect failed", "Configure", "Ready"};
+const char *main_state_string[] = {"Disconnected", "Connecting", "Configure", "Main"};
 
 typedef enum : byte
 {
@@ -68,6 +68,10 @@ void setup()
   observable_wifi_status.Do([](wl_status_t status)
                             {
     switch (status) {
+      case WL_NO_SSID_AVAIL:
+        log_i("wifi_status: WL_NO_SSID_AVAIL");
+        observable_main_event = main_event::event_connect_failed;
+        break;
       case WL_DISCONNECTED:
         log_i("wifi_status: WL_DISCONNECTED");
         observable_main_event = main_event::event_disconnected;
@@ -98,16 +102,15 @@ void setup()
               switch (event)
               {
               case event_connected:
-                state = state_ready;
+                screen.reset(new screen_main());
+                state = state_main;
                 break;
               case event_connect_failed:
+              WiFi.mode(WIFI_OFF);
+                screen.reset(new screen_settings());
                 state = state_configure;
                 break;
               }
-              break;
-            case state_connect_failed:
-              screen.reset(new screen_settings());
-              state = state_configure;
               break;
             case state_configure:
               switch (event)
@@ -117,7 +120,7 @@ void setup()
                 break;
               }
               break;
-            case state_ready:
+            case state_main:
               break;
             }
             log_i("New state: %s", main_state_string[state]);
@@ -127,10 +130,11 @@ void setup()
       .Do([](main_state state)
           { observable_main_state = state; });
 
-  WiFi.begin();
+              WiFi.begin("xxx", "yy");
+              WiFi.setAutoReconnect(false);
 
   // Allow over the air updates
-  // ArduinoOTA.begin();
+  ArduinoOTA.begin();
 
   // Set the time servers
   configTime(0, 0, "pool.ntp.org");
@@ -140,7 +144,11 @@ void loop()
 {
   // put your main code here, to run repeatedly:
   // Handle display/touch
-  lv_timer_handler();
+  {
+    const std::lock_guard<std::mutex> lock(screen::_mutex);
+    lv_timer_handler();
+  }
+
   // Handle OTA
   ArduinoOTA.handle();
 }

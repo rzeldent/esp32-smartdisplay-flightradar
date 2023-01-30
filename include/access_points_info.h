@@ -5,11 +5,17 @@
 
 #include <vector>
 
-struct wifi_ap_record : wifi_ap_record_t {
-  std::string ssid_string() const;
-};
+typedef struct
+{
+  String _ssid;
+  int32_t _rssi;
+  wifi_auth_mode_t _encryption;
+} access_point_t;
 
-class access_points_info : public std::vector<wifi_ap_record> {
+class access_points_info
+{
 public:
-  void refresh();
+  void scan(bool clear = true);
+
+  std::vector<access_point_t> _access_points;
 };

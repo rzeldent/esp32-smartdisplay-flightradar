@@ -3,35 +3,36 @@
 
 #include <iterator>
 
-std::string wifi_ap_record::ssid_string() const {
-  return std::string((const char *)ssid, sizeof(ssid));
-}
-
-void access_points_info::refresh() {
-  /*
+void access_points_info::scan(bool clear /*=true*/)
+{
   log_i("Scanning for networks");
-  clear();
+  if (clear)
+    _access_points.clear();
+
   auto scan_count = WiFi.scanNetworks();
-  if (scan_count == 0) {
+  if (scan_count == 0)
+  {
     log_w("No networks found!");
     return;
   }
 
-  auto scan_results = static_cast<wifi_ap_record *>(WiFi.getScanInfoByIndex(0));
-  std::vector<wifi_ap_record> scan_info(scan_results, scan_results + scan_count);
-  log_i("Found %d networks", scan_info.size());
-
-  for (auto it = scan_info.cbegin(); it != scan_info.cend(); ++it) {
-    auto ssid = it->ssid_string();
-    auto pos = std::find_if(scan_info.begin(), scan_info.end(), [&ssid, it](const wifi_ap_record &e) { return ssid == e.ssid_string(); });
-    // Only insert or replace if not present or rssi is higher
-    if (pos != scan_info.end() && pos->rssi > it->rssi)
-      continue;
-
-    push_back(*it);
+  for (int16_t i = 0; i < scan_count; ++i)
+  {
+    log_i("%d", i);
+    auto found_ap = access_point_t({ WiFi.SSID(i), WiFi.RSSI(i), WiFi.encryptionType(i)});
+//    auto pos = std::find_if(_access_points.begin(), _access_points.end(), [&found_ap](const access_point_t &ap)
+    //                        { return ap._ssid == found_ap._ssid; });
+  //  if (pos == _access_points.cend())
+      _access_points.push_back(found_ap);
+    //else
+    //{
+      //if (pos->_rssi < found_ap._rssi)
+        //pos->_rssi = found_ap._rssi;
+   // }
   }
+  log_i("Networks found: %d", _access_points.size());
 
   // Sort descending on signal strength
-  std::sort(begin(), end(), [](const wifi_ap_record &first, const wifi_ap_record &second) { return first.rssi > second.rssi; });
-  */
+  std::sort(_access_points.begin(), _access_points.end(), [](const access_point_t &first, const access_point_t &second)
+            { return first._rssi > second._rssi; });
 }
