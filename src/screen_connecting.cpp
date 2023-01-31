@@ -7,7 +7,7 @@ void screen_connecting::OnNext(wl_status_t status)
   log_i("wl_status: %d", status);
 
   {
-    const std::lock_guard<std::mutex> lock(_mutex);
+    const std::lock_guard<std::mutex> lock(lvgl_mutex);
 
     switch (status)
     {
@@ -58,7 +58,7 @@ screen_connecting::screen_connecting(ObservableProperty<wl_status_t> *observable
   observable_wifi_status_ = observable_wifi_status;
 
   {
-    const std::lock_guard<std::mutex> lock(_mutex);
+    const std::lock_guard<std::mutex> lock(lvgl_mutex);
 
     static const lv_coord_t col_dsc[] = {240, LV_GRID_TEMPLATE_LAST};                 // 240
     static const lv_coord_t row_dsc[] = {20, 20, 240, 20, 20, LV_GRID_TEMPLATE_LAST}; // 320

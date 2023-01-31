@@ -25,7 +25,7 @@ void screen_settings::list_event_handler(lv_event_t *e)
   auto code = lv_event_get_code(e);
   auto current_target = lv_event_get_current_target(e);
   auto target = lv_event_get_target(e);
-  const std::lock_guard<std::mutex> lock(_mutex);
+  const std::lock_guard<std::mutex> lock(lvgl_mutex);
   if (code == LV_EVENT_CLICKED)
   {
     auto ssid = lv_list_get_btn_text(current_target, target);
@@ -41,7 +41,7 @@ screen_settings::screen_settings()
   log_i("screen_settings::screen_settings");
 
   {
-    const std::lock_guard<std::mutex> lock(_mutex);
+    const std::lock_guard<std::mutex> lock(lvgl_mutex);
 
     static const lv_coord_t col_dsc[] = {120, 120, LV_GRID_TEMPLATE_LAST};    // 240
     static const lv_coord_t row_dsc[] = {20, 260, 40, LV_GRID_TEMPLATE_LAST}; // 320
@@ -78,7 +78,7 @@ void screen_settings::refresh()
 {
   _access_points.scan();
   {
-    const std::lock_guard<std::mutex> lock(_mutex);
+    const std::lock_guard<std::mutex> lock(lvgl_mutex);
 
     for (auto it = _access_points._access_points.begin(); it != _access_points._access_points.end(); ++it)
     {

@@ -1,13 +1,11 @@
 #include <screen.h>
 #include <esp32-hal-log.h>
 
-std::mutex screen::_mutex;
-
 screen::screen()
 {
   log_i("screen::screen");
 
-  const std::lock_guard<std::mutex> lock(_mutex);
+  const std::lock_guard<std::mutex> lock(lvgl_mutex);
 
   _screen = lv_obj_create(nullptr);
   lv_obj_set_size(_screen, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -22,7 +20,7 @@ screen::~screen()
 {
   log_i("~screen::screen");
 
-  const std::lock_guard<std::mutex> lock(_mutex);
+  const std::lock_guard<std::mutex> lock(lvgl_mutex);
 
   lv_obj_del_async(_screen);
 }

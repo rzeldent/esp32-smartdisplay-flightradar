@@ -1,7 +1,6 @@
 #pragma once
 
-#include <lvgl.h>
-#include <mutex>
+#include <esp32_smartdisplay.h>
 
 class screen
 {
@@ -12,7 +11,6 @@ public:
   const uint16_t screen_height();
   const uint16_t screen_width();
 
-  static std::mutex _mutex;
 protected:
   lv_obj_t *_screen;
 };

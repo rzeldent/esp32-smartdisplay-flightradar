@@ -36,14 +36,42 @@ ObservableProperty<main_event> observable_main_event;
 
 std::unique_ptr<screen> screen;
 
+struct arg
+{
+  arg(wl_status_t status)
+  {
+    _status = status;
+  }
+  wl_status_t _status;
+};
+
+static void *updateWifiThread(void *pv)
+{
+  auto args = static_cast<arg *>(pv);
+  //  auto status = (wl_status_t)pv;
+  log_i("Update from thread: %d", args->_status);
+  delete args;
+  // observable_wifi_status = status;
+  // return nullptr;
+}
+
 void on_wifi_event(arduino_event_id_t event)
 {
-  observable_wifi_status = WiFi.status();
+  // observable_wifi_status = WiFi.status();
+  auto status = WiFi.status();
+  log_i("Status: %d", status);
+  
+   pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setstacksize(&attr, 2048);
+
+  pthread_t thread_id;
+  pthread_create(&thread_id, &attr, &updateWifiThread, static_cast<void *>(new arg(status)));
+  //pthread_join(thread_id, nullptr);
 }
 
 void setup()
 {
-
   // put your setup code here, to run once:
   Serial.begin(115200);
 
@@ -106,7 +134,7 @@ void setup()
                 state = state_main;
                 break;
               case event_connect_failed:
-              WiFi.mode(WIFI_OFF);
+                WiFi.mode(WIFI_OFF);
                 screen.reset(new screen_settings());
                 state = state_configure;
                 break;
@@ -130,8 +158,8 @@ void setup()
       .Do([](main_state state)
           { observable_main_state = state; });
 
-              WiFi.begin("xxx", "yy");
-              WiFi.setAutoReconnect(false);
+  WiFi.begin("xxx", "yy");
+  WiFi.setAutoReconnect(false);
 
   // Allow over the air updates
   ArduinoOTA.begin();
@@ -145,7 +173,7 @@ void loop()
   // put your main code here, to run repeatedly:
   // Handle display/touch
   {
-    const std::lock_guard<std::mutex> lock(screen::_mutex);
+    const std::lock_guard<std::mutex> lock(lvgl_mutex);
     lv_timer_handler();
   }
 
