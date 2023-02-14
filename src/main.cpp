@@ -36,38 +36,9 @@ ObservableProperty<main_event> observable_main_event;
 
 std::unique_ptr<screen> screen;
 
-struct arg
-{
-  arg(wl_status_t status)
-  {
-    _status = status;
-  }
-  wl_status_t _status;
-};
-
-static void *updateWifiThread(void *pv)
-{
-  auto args = static_cast<arg *>(pv);
-  //  auto status = (wl_status_t)pv;
-  log_i("Update from thread: %d", args->_status);
-  delete args;
-  // observable_wifi_status = status;
-  // return nullptr;
-}
-
 void on_wifi_event(arduino_event_id_t event)
 {
-  // observable_wifi_status = WiFi.status();
-  auto status = WiFi.status();
-  log_i("Status: %d", status);
-  
-   pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setstacksize(&attr, 2048);
-
-  pthread_t thread_id;
-  pthread_create(&thread_id, &attr, &updateWifiThread, static_cast<void *>(new arg(status)));
-  //pthread_join(thread_id, nullptr);
+  observable_wifi_status = WiFi.status();
 }
 
 void setup()
@@ -79,6 +50,9 @@ void setup()
   log_i("Free heap: %d bytes", ESP.getFreeHeap());
 
   smartdisplay_init();
+
+//  access_points_info ap_info;
+//ap_info.scan();
 
   // Start monitoring the connection
   WiFi.onEvent(on_wifi_event);
@@ -134,7 +108,6 @@ void setup()
                 state = state_main;
                 break;
               case event_connect_failed:
-                WiFi.mode(WIFI_OFF);
                 screen.reset(new screen_settings());
                 state = state_configure;
                 break;
@@ -151,7 +124,7 @@ void setup()
             case state_main:
               break;
             }
-            log_i("New state: %s", main_state_string[state]);
+            log_i("State: %s", main_state_string[state]);
             return state;
           },
           state_disconnected)
@@ -173,7 +146,7 @@ void loop()
   // put your main code here, to run repeatedly:
   // Handle display/touch
   {
-    const std::lock_guard<std::mutex> lock(lvgl_mutex);
+    const std::lock_guard<std::recursive_mutex> lock(lvgl_mutex);
     lv_timer_handler();
   }
 

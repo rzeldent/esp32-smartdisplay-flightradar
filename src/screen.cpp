@@ -5,7 +5,7 @@ screen::screen()
 {
   log_i("screen::screen");
 
-  const std::lock_guard<std::mutex> lock(lvgl_mutex);
+  const std::lock_guard<std::recursive_mutex> lock(lvgl_mutex);
 
   _screen = lv_obj_create(nullptr);
   lv_obj_set_size(_screen, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -20,17 +20,21 @@ screen::~screen()
 {
   log_i("~screen::screen");
 
-  const std::lock_guard<std::mutex> lock(lvgl_mutex);
+  const std::lock_guard<std::recursive_mutex> lock(lvgl_mutex);
 
   lv_obj_del_async(_screen);
 }
 
 const uint16_t screen::screen_height()
 {
+  const std::lock_guard<std::recursive_mutex> lock(lvgl_mutex);
+
   return lv_area_get_height(&_screen->coords);
 }
 
 const uint16_t screen::screen_width()
 {
+  const std::lock_guard<std::recursive_mutex> lock(lvgl_mutex);
+
   return lv_area_get_width(&_screen->coords);
 }
