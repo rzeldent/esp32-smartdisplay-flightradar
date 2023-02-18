@@ -12,10 +12,8 @@ typedef struct
   wifi_auth_mode_t _encryption;
 } access_point_t;
 
-class access_points_info
+class access_points_info : public std::vector<access_point_t>
 {
 public:
-  void scan(bool clear = true);
-
-  std::vector<access_point_t> _access_points;
+  void scan();
 };

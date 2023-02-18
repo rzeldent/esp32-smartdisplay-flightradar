@@ -3,11 +3,11 @@
 
 #include <iterator>
 
-void access_points_info::scan(bool clear /*=true*/)
+void access_points_info::scan()
 {
   log_i("Scanning for networks");
-  if (clear)
-    _access_points.clear();
+
+  clear();
 
   auto scan_count = WiFi.scanNetworks();
   if (scan_count <= 0)
@@ -19,12 +19,12 @@ void access_points_info::scan(bool clear /*=true*/)
   for (int16_t i = 0; i < scan_count; ++i)
   {
     auto found_ap = access_point_t({WiFi.SSID(i), WiFi.RSSI(i), WiFi.encryptionType(i)});
-    auto pos = std::find_if(_access_points.begin(), _access_points.end(), [&found_ap](const access_point_t &ap)
+    auto pos = std::find_if(begin(), end(), [&found_ap](const access_point_t &ap)
                             { return ap._ssid == found_ap._ssid; });
-    if (pos == std::end(_access_points))
+    if (pos == end())
     {
-      log_i("Add: %s", pos->_ssid.c_str());
-      _access_points.push_back(found_ap);
+      log_i("Add: %s", found_ap._ssid.c_str());
+      push_back(found_ap);
     }
     else
     {
@@ -37,8 +37,8 @@ void access_points_info::scan(bool clear /*=true*/)
   }
 
   // Sort descending on signal strength
-  std::sort(_access_points.begin(), _access_points.end(), [](const access_point_t &first, const access_point_t &second)
+  std::sort(begin(), end(), [](const access_point_t &first, const access_point_t &second)
             { return first._rssi > second._rssi; });
 
-  log_i("Networks found: %d", _access_points.size());
+  log_i("Networks found: %d", size());
 }

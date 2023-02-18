@@ -24,17 +24,3 @@ screen::~screen()
 
   lv_obj_del_async(_screen);
 }
-
-const uint16_t screen::screen_height()
-{
-  const std::lock_guard<std::recursive_mutex> lock(lvgl_mutex);
-
-  return lv_area_get_height(&_screen->coords);
-}
-
-const uint16_t screen::screen_width()
-{
-  const std::lock_guard<std::recursive_mutex> lock(lvgl_mutex);
-
-  return lv_area_get_width(&_screen->coords);
-}

@@ -51,9 +51,6 @@ void setup()
 
   smartdisplay_init();
 
-//  access_points_info ap_info;
-//ap_info.scan();
-
   // Start monitoring the connection
   WiFi.onEvent(on_wifi_event);
   // Led
@@ -67,13 +64,11 @@ void setup()
         smartdisplay_set_led_color(connected ? lv_color32_t({.ch = {.green = 0xFF}}) : lv_color32_t({.ch = {.red = 0xFF}})); });
 
   // Wifi Events
-  observable_wifi_status.Do([](wl_status_t status)
-                            {
+  observable_wifi_status
+      .Distinct()
+      .Do([](wl_status_t status)
+          {
     switch (status) {
-      case WL_NO_SSID_AVAIL:
-        log_i("wifi_status: WL_NO_SSID_AVAIL");
-        observable_main_event = main_event::event_connect_failed;
-        break;
       case WL_DISCONNECTED:
         log_i("wifi_status: WL_DISCONNECTED");
         observable_main_event = main_event::event_disconnected;
@@ -81,6 +76,10 @@ void setup()
       case WL_CONNECTED:
         log_i("wifi_status: WL_CONNECTED");
         observable_main_event = main_event::event_connected;
+        break;
+      case WL_NO_SSID_AVAIL:
+        log_i("wifi_status: WL_NO_SSID_AVAIL");
+        observable_main_event = main_event::event_connect_failed;
         break;
       case WL_CONNECT_FAILED:
         log_i("wifi_status: WL_CONNECT FAILED");
@@ -90,6 +89,7 @@ void setup()
 
   // State machine
   observable_main_event
+      .Distinct()
       .Reduce<main_state>(
           [](main_state state, main_event event)
           {
