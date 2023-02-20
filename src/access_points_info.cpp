@@ -18,19 +18,18 @@ void access_points_info::scan()
 
   for (int16_t i = 0; i < scan_count; ++i)
   {
-    auto found_ap = access_point_t({WiFi.SSID(i), WiFi.RSSI(i), WiFi.encryptionType(i)});
-    auto pos = std::find_if(begin(), end(), [&found_ap](const access_point_t &ap)
-                            { return ap._ssid == found_ap._ssid; });
-    if (pos == end())
+    auto ap = access_point_t({WiFi.SSID(i), WiFi.RSSI(i), WiFi.encryptionType(i)});
+    auto it = find_by_ssid(ap._ssid);
+    if (it == end())
     {
-      log_i("Add: %s", found_ap._ssid.c_str());
-      push_back(found_ap);
+      log_i("Add: %s", ap._ssid.c_str());
+      push_back(ap);
     }
     else
     {
-      if (pos->_rssi < found_ap._rssi)
+      if (it->_rssi < ap._rssi)
       {
-        pos->_rssi = found_ap._rssi;
+        it->_rssi = ap._rssi;
         log_i("Updated RSSI");
       }
     }
@@ -41,4 +40,10 @@ void access_points_info::scan()
             { return first._rssi > second._rssi; });
 
   log_i("Networks found: %d", size());
+}
+
+std::vector<access_point_t>::iterator access_points_info::find_by_ssid(const String &ssid)
+{
+  return std::find_if(begin(), end(), [&ssid](const access_point_t &ap)
+                      { return ap._ssid == ssid; });
 }

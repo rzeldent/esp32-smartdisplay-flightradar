@@ -14,6 +14,7 @@ typedef enum : byte
 {
   state_disconnected,
   state_connecting,
+  state_connect_error,
   state_configure,
   state_main
 } main_state;
@@ -131,14 +132,15 @@ void setup()
       .Do([](main_state state)
           { observable_main_state = state; });
 
-  WiFi.begin("xxx", "yy");
   WiFi.setAutoReconnect(false);
+  WiFi.begin("xxx", "yy");
+  
 
   // Allow over the air updates
-  ArduinoOTA.begin();
+  //ArduinoOTA.begin();
 
   // Set the time servers
-  configTime(0, 0, "pool.ntp.org");
+  //configTime(0, 0, "pool.ntp.org");
 }
 
 void loop()

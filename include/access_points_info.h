@@ -16,4 +16,6 @@ class access_points_info : public std::vector<access_point_t>
 {
 public:
   void scan();
+
+  std::vector<access_point_t>::iterator find_by_ssid(const String &ssid);
 };
