@@ -6,6 +6,8 @@ using namespace Reactive;
 #include <esp32_smartdisplay.h>
 #include <esp_wifi.h>
 
+#include <arduino_event_names.h>
+
 #include <screen_connecting.h>
 #include <screen_settings.h>
 #include <screen_main.h>
@@ -19,7 +21,7 @@ typedef enum : byte
   state_main
 } main_state;
 
-const char *main_state_string[] = {"Disconnected", "Connecting", "Configure", "Main"};
+const char *main_state_string[] = {"Disconnected", "Connecting", "ConnectError", "Configure", "Main"};
 
 typedef enum : byte
 {
@@ -31,15 +33,15 @@ typedef enum : byte
 
 const char *main_event_string[] = {"Disconnected", "Connected", "Connect failed", "Configured"};
 
-ObservableProperty<wl_status_t> observable_wifi_status;
+ObservableProperty<arduino_event_t *> observable_wifi_status;
 ObservableProperty<main_state> observable_main_state;
 ObservableProperty<main_event> observable_main_event;
 
 std::unique_ptr<screen> screen;
 
-void on_wifi_event(arduino_event_id_t event)
+void on_wifi_event(arduino_event_t *event)
 {
-  observable_wifi_status = WiFi.status();
+  observable_wifi_status = event;
 }
 
 void setup()
@@ -56,8 +58,8 @@ void setup()
   WiFi.onEvent(on_wifi_event);
   // Led
   observable_wifi_status
-      .Map<bool>([](wl_status_t status)
-                 { return status == WL_CONNECTED; })
+      .Map<bool>([](arduino_event_t *event)
+                 { return event->event_id == ARDUINO_EVENT_WIFI_STA_CONNECTED; })
       .Distinct()
       .Do([](bool connected)
           {
@@ -66,31 +68,37 @@ void setup()
 
   // Wifi Events
   observable_wifi_status
-      .Distinct()
-      .Do([](wl_status_t status)
+      //.Distinct()
+      .Do([](arduino_event_t *event)
           {
-    switch (status) {
-      case WL_DISCONNECTED:
-        log_i("wifi_status: WL_DISCONNECTED");
-        observable_main_event = main_event::event_disconnected;
-        break;
-      case WL_CONNECTED:
-        log_i("wifi_status: WL_CONNECTED");
-        observable_main_event = main_event::event_connected;
-        break;
-      case WL_NO_SSID_AVAIL:
-        log_i("wifi_status: WL_NO_SSID_AVAIL");
-        observable_main_event = main_event::event_connect_failed;
-        break;
-      case WL_CONNECT_FAILED:
-        log_i("wifi_status: WL_CONNECT FAILED");
-        observable_main_event = main_event::event_connect_failed;
-        break;
-    } });
+            log_i("ARDUINO_EVENT_%s", arduino_event_names[event->event_id]);
+            switch (event->event_id) {
+            case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+              switch (event->event_info.wifi_sta_disconnected.reason)
+              {
+                case WIFI_REASON_NO_AP_FOUND:
+                case WIFI_REASON_AUTH_FAIL:
+                  observable_main_event = main_event::event_connect_failed;
+                  break;
+                  case WIFI_REASON_ASSOC_LEAVE:
+                  // TODO: Disconnected voluntary
+                  break;
+                default:
+                  observable_main_event = main_event::event_disconnected;
+                  break;
+              }
+              break;
+            case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+              observable_main_event = main_event::event_connected;
+              break;
+            case ARDUINO_EVENT_WIFI_STA_STOP:
+              observable_main_event = main_event::event_connect_failed;
+              break;
+          } });
 
   // State machine
   observable_main_event
-      .Distinct()
+      //.Distinct()
       .Reduce<main_state>(
           [](main_state state, main_event event)
           {
@@ -133,14 +141,14 @@ void setup()
           { observable_main_state = state; });
 
   WiFi.setAutoReconnect(false);
-  WiFi.begin("xxx", "yy");
-  
+  // WiFi.begin("xxx", "yy");
+  WiFi.begin();
 
   // Allow over the air updates
-  //ArduinoOTA.begin();
+  ArduinoOTA.begin();
 
   // Set the time servers
-  //configTime(0, 0, "pool.ntp.org");
+  configTime(0, 0, "pool.ntp.org");
 }
 
 void loop()

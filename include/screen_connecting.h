@@ -5,18 +5,17 @@
 using namespace Reactive;
 #include <screen.h>
 
-class screen_connecting : public screen, public IObserver<wl_status_t>
+class screen_connecting : public screen, public IObserver<arduino_event_t*>
 {
 public:
-  screen_connecting(ObservableProperty<wl_status_t> *observable_wifi_status);
+  screen_connecting(ObservableProperty<arduino_event_t*> *observable_wifi_status);
   ~screen_connecting();
 
-  void OnNext(wl_status_t value);
+  void OnNext(arduino_event_t* value);
   void OnComplete();
 
 private:
-  ObservableProperty<wl_status_t> *observable_wifi_status_;
-
+  ObservableProperty<arduino_event_t*> *_observable_arduino_status;
   lv_obj_t *_info;
   lv_obj_t *_ip;
 };

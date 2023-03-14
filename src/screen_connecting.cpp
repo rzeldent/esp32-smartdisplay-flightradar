@@ -1,46 +1,27 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
+
+#include <arduino_event_names.h>
+
 #include <screen_connecting.h>
 
-void screen_connecting::OnNext(wl_status_t status)
+void screen_connecting::OnNext(arduino_event_t* event)
 {
-  log_i("wl_status: %d", status);
+  log_i("arduino_event_id_t: %d - %s", event->event_id, arduino_event_names[event->event_id]);
 
   const std::lock_guard<std::recursive_mutex> lock(lvgl_mutex);
 
-  switch (status)
+  lv_label_set_text(_info, arduino_event_names[event->event_id]);
+
+  switch (event->event_id)
   {
-  case ARDUINO_EVENT_WIFI_READY:
-    lv_label_set_text(_info, "WiFi ready");
-    break;
-  case ARDUINO_EVENT_WIFI_SCAN_DONE:
-    lv_label_set_text(_info, "Scan done");
-    break;
-  case ARDUINO_EVENT_WIFI_STA_START:
-    lv_label_set_text(_info, "Start");
-    break;
-  case ARDUINO_EVENT_WIFI_STA_STOP:
-    lv_label_set_text(_info, "Stop");
-    break;
-  case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-    lv_label_set_text(_info, "Connected");
-    break;
-  case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-    lv_label_set_text(_info, "Disconnected");
-    break;
-  case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE:
-    lv_label_set_text(_info, "Authentication mode change");
-    break;
   case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-    lv_label_set_text(_info, "Got IP address");
     lv_label_set_text(_ip, WiFi.localIP().toString().c_str());
     break;
   case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-    lv_label_set_text(_info, "Got IP address");
     lv_label_set_text(_ip, WiFi.localIPv6().toString().c_str());
     break;
   case ARDUINO_EVENT_WIFI_STA_LOST_IP:
-    lv_label_set_text(_info, "Lost IP address");
     lv_label_set_text(_ip, "");
     break;
   }
@@ -50,11 +31,11 @@ void screen_connecting::OnComplete()
 {
 }
 
-screen_connecting::screen_connecting(ObservableProperty<wl_status_t> *observable_wifi_status)
+screen_connecting::screen_connecting(ObservableProperty<arduino_event_t*> *observable_wifi_status)
 {
   log_i("screen_connecting::screen_connecting");
 
-  observable_wifi_status_ = observable_wifi_status;
+  _observable_arduino_status = observable_wifi_status;
 
   const std::lock_guard<std::recursive_mutex> lock(lvgl_mutex);
 
@@ -87,11 +68,11 @@ screen_connecting::screen_connecting(ObservableProperty<wl_status_t> *observable
   lv_obj_set_grid_cell(_ip, LV_GRID_ALIGN_CENTER, 0, 1, LV_GRID_ALIGN_START, 4, 1);
   lv_label_set_text(_ip, "");
 
-  observable_wifi_status_->Subscribe(*this);
+  _observable_arduino_status->Subscribe(*this);
 }
 
 screen_connecting::~screen_connecting()
 {
   log_i("screen_connecting::~screen_connecting");
-  observable_wifi_status_->UnSubscribe(*this);
+  _observable_arduino_status->UnSubscribe(*this);
 }

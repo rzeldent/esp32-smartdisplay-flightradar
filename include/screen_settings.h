@@ -14,6 +14,9 @@ private:
   lv_obj_t *_wifi_password;
   lv_obj_t *_connect_button;
 
+  std::vector<access_point_t>::iterator _ap_info;
+  String _password;
+
   access_points_info _access_points;
   static void list_event_handler(lv_event_t *e);
   static void button_cancel_handler(lv_event_t *e);
@@ -25,6 +28,5 @@ private:
   static void password_focus_handler(lv_event_t *e);
 
   void refresh();
-  void connect(const String &ssid);
-  void done(const String &ssid, const String &password);
+  void connect(std::vector<access_point_t>::iterator);
 };

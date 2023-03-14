@@ -47,8 +47,7 @@ void screen_settings::list_event_handler(lv_event_t *e)
   if (code == LV_EVENT_CLICKED)
   {
     auto ssid = lv_list_get_btn_text(current_target, target);
-    log_i("Clicked: %s", ssid);
-    that->connect(ssid);
+    that->connect(that->_access_points.find_by_ssid(ssid));
   }
 }
 
@@ -60,6 +59,22 @@ void screen_settings::button_connect_connect_handler(lv_event_t *e)
 
   auto that = (screen_settings *)lv_event_get_user_data(e);
   auto code = lv_event_get_code(e);
+
+  String password = lv_textarea_get_text(that->_wifi_password);
+  password="hrxwcsWwn7yz";
+/*
+    if (_password.empty())
+  {
+        // Password required. Prompt for password
+        static const char *btns[] = {"OK", "Cancel", ""};
+        auto message = String("Please enter the password for ") + _ssid + ":";
+        auto password_box = lv_msgbox_create(that->_screen, "Password required", message.c_str(), btns, false);
+        lv_obj_align(password_box, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_add_event_cb(password_box, message_box_handler, LV_EVENT_CLICKED, that);
+        }
+
+*/  
+  WiFi.begin(that->_ap_info->_ssid.c_str(), password.c_str());
 }
 
 void screen_settings::button_connect_cancel_handler(lv_event_t *e)
@@ -71,7 +86,7 @@ void screen_settings::button_connect_cancel_handler(lv_event_t *e)
   auto that = (screen_settings *)lv_event_get_user_data(e);
   auto code = lv_event_get_code(e);
 
-  
+  WiFi.begin();
 }
 
 void screen_settings::password_focus_handler(lv_event_t *e)
@@ -97,20 +112,16 @@ void screen_settings::password_focus_handler(lv_event_t *e)
   }
 }
 
-/*
-void screen_settings::update_connect_button_enable()
-{
-  if ((lv_obj_get_state(_wifi_password) & LV_STATE_DISABLED > 0) || strlen(lv_textarea_get_text(_wifi_password)) >= 8)
-    lv_obj_add_state(_connect_button, LV_STATE_DISABLED);
-  else
-    lv_obj_clear_state(_connect_button, LV_STATE_DISABLED);
-}
-*/
+void screen_settings::connect(std::vector<access_point_t>::iterator ap)
+{ 
+  if (ap == _access_points.end())
+  {
+    log_e("Invalid iterator for AP");
+    return;
+  }
 
-void screen_settings::connect(const String &ssid)
-{
-  auto it = _access_points.find_by_ssid(ssid);
-  log_i("Found AP info: %s", it->_ssid);
+  _ap_info = ap;
+  log_i("Connect to SSID: %s", ap->_ssid.c_str());
 
   const std::lock_guard<std::recursive_mutex> lock(lvgl_mutex);
 
@@ -130,7 +141,7 @@ void screen_settings::connect(const String &ssid)
 
   auto label_ssid = lv_label_create(screen);
   lv_obj_set_grid_cell(label_ssid, LV_GRID_ALIGN_START, 0, 2, LV_GRID_ALIGN_START, 1, 2);
-  lv_label_set_text(label_ssid, ssid.c_str());
+  lv_label_set_text(label_ssid, ap->_ssid.c_str());
 
   auto password_label = lv_label_create(screen);
   lv_obj_set_grid_cell(password_label, LV_GRID_ALIGN_START, 0, 2, LV_GRID_ALIGN_START, 2, 1);
@@ -143,12 +154,15 @@ void screen_settings::connect(const String &ssid)
   lv_textarea_set_max_length(_wifi_password, 64);
   lv_textarea_set_password_mode(_wifi_password, true);
 
-  if (it->_encryption == wifi_auth_mode_t::WIFI_AUTH_OPEN)
+  log_i("Found AP info: %s", ap->_ssid);
+  if (ap->_encryption == wifi_auth_mode_t::WIFI_AUTH_OPEN)
     lv_obj_add_state(_wifi_password, LV_STATE_DISABLED);
 
   auto keyboard = lv_keyboard_create(screen);
-  lv_obj_set_grid_cell(keyboard, LV_GRID_ALIGN_START, 0, 1, LV_GRID_ALIGN_CENTER, 4, 1);
-  // lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_set_grid_cell(keyboard, LV_GRID_ALIGN_START, 0, 2, LV_GRID_ALIGN_START, 4, 1);
+  lv_keyboard_set_textarea(keyboard, _wifi_password);
+  // Size not set by lv_obj_set_grid_cell ?!
+  lv_obj_set_size(keyboard, 200, 140);
 
   lv_obj_add_event_cb(_wifi_password, password_focus_handler, LV_EVENT_FOCUSED, keyboard);
   lv_obj_add_event_cb(_wifi_password, password_focus_handler, LV_EVENT_DEFOCUSED, keyboard);
@@ -161,7 +175,7 @@ void screen_settings::connect(const String &ssid)
 
   auto cancel_button = lv_btn_create(screen);
   lv_obj_set_grid_cell(cancel_button, LV_GRID_ALIGN_CENTER, 1, 1, LV_GRID_ALIGN_CENTER, 5, 1);
-  lv_obj_add_event_cb(cancel_button, button_connect_cancel_handler, LV_EVENT_CLICKED, nullptr);
+  lv_obj_add_event_cb(cancel_button, button_connect_cancel_handler, LV_EVENT_CLICKED, this);
   auto cancel_label = lv_label_create(cancel_button);
   lv_label_set_text(cancel_label, "Cancel");
 
@@ -206,7 +220,7 @@ screen_settings::screen_settings()
   auto cancel_label = lv_label_create(cancel_button);
   lv_label_set_text(cancel_label, "Cancel");
 
-  refresh();
+  // refresh();
 }
 
 screen_settings::~screen_settings()
@@ -232,9 +246,4 @@ void screen_settings::refresh()
     lv_obj_add_event_cb(btn, list_event_handler, LV_EVENT_CLICKED, this);
     log_i("Added list button: %s %d", it->_ssid.c_str(), btn);
   }
-}
-
-void screen_settings::done(const String &ssid, const String &password)
-{
-  WiFi.begin(ssid.c_str(), password.c_str());
 }
