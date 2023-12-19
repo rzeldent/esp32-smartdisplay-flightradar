@@ -28,5 +28,5 @@ private:
   static void password_focus_handler(lv_event_t *e);
 
   void refresh();
-  void connect(std::vector<access_point_t>::iterator);
+  void connect(std::vector<access_point_t>::iterator ap);
 };

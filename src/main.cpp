@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <ReactiveArduinoLib.h>
-using namespace Reactive;
 #include <esp32-hal-log.h>
 #include <esp32_smartdisplay.h>
 #include <esp_wifi.h>
