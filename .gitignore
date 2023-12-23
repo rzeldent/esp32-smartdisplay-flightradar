@@ -5,3 +5,6 @@
 .vscode/ipch
 *.log
 .DS_Store
+backup/
+autosave/
+cache/

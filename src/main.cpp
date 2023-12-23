@@ -1,150 +1,47 @@
 #include <Arduino.h>
-#include <ArduinoOTA.h>
-#include <ReactiveArduinoLib.h>
-#include <esp32-hal-log.h>
+#include <WiFi.h>
+
+#include <vector>
+
 #include <esp32_smartdisplay.h>
-#include <esp_wifi.h>
+#include <ui/ui.h>
 
-#include <arduino_event_names.h>
+#include <settings.h>
 
-#include <screen_connecting.h>
-#include <screen_settings.h>
-#include <screen_main.h>
+#include <Preferences.h>
 
-typedef enum : byte
-{
-  state_disconnected,
-  state_connecting,
-  state_connect_error,
-  state_configure,
-  state_main
-} main_state;
+#include <airport.h>
+#include <city.h>
 
-const char *main_state_string[] = {"Disconnected", "Connecting", "ConnectError", "Configure", "Main"};
-
-typedef enum : byte
-{
-  event_disconnected,
-  event_connected,
-  event_connect_failed,
-  event_configured
-} main_event;
-
-const char *main_event_string[] = {"Disconnected", "Connected", "Connect failed", "Configured"};
-
-ObservableProperty<arduino_event_t *> observable_wifi_status;
-ObservableProperty<main_state> observable_main_state;
-ObservableProperty<main_event> observable_main_event;
-
-std::unique_ptr<screen> screen;
-
-void on_wifi_event(arduino_event_t *event)
-{
-  observable_wifi_status = event;
-}
+#include <format_gps.h>
+#include <format_number.h>
 
 void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  log_i("CPU Freq: %d Mhz", getCpuFrequencyMhz());
-  log_i("Free heap: %d bytes", ESP.getFreeHeap());
+  log_i("CPU: %s rev%d, CPU Freq: %d Mhz, %d core(s)", ESP.getChipModel(), ESP.getChipRevision(), getCpuFrequencyMhz(), ESP.getChipCores());
+  log_i("Flash      : %s", format_memory(ESP.getFlashChipSize()).c_str());
+  log_i("Free heap  : %s", format_memory(ESP.getFreeHeap()).c_str());
+  log_i("Free PSRAM : %s", format_memory(ESP.getPsramSize()).c_str());
+  log_i("SDK version: %s", ESP.getSdkVersion());
 
   smartdisplay_init();
+  auto disp = lv_disp_get_default();
+  lv_disp_set_rotation(disp, LV_DISP_ROT_90);
 
   // Start monitoring the connection
-  WiFi.onEvent(on_wifi_event);
-  // Led
-  observable_wifi_status
-      .Map<bool>([](arduino_event_t *event)
-                 { return event->event_id == ARDUINO_EVENT_WIFI_STA_CONNECTED; })
-      .Distinct()
-      .Do([](bool connected)
-          {
-        log_d("Connected: %d", connected);
-        smartdisplay_set_led_color(connected ? lv_color32_t({.ch = {.green = 0xFF}}) : lv_color32_t({.ch = {.red = 0xFF}})); });
+  // log_d("Connected: %d", connected);
+  // digitalWrite(LED_R_GPIO, connected);  // on if disconnected
+  // digitalWrite(LED_G_GPIO, !connected);  // on if connected
+  // digitalWrite(LED_B_GPIO, true); // off
 
-  // Wifi Events
-  observable_wifi_status
-      //.Distinct()
-      .Do([](arduino_event_t *event)
-          {
-            log_i("ARDUINO_EVENT_%s", arduino_event_names[event->event_id]);
-            switch (event->event_id) {
-            case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-              switch (event->event_info.wifi_sta_disconnected.reason)
-              {
-                case WIFI_REASON_NO_AP_FOUND:
-                case WIFI_REASON_AUTH_FAIL:
-                  observable_main_event = main_event::event_connect_failed;
-                  break;
-                  case WIFI_REASON_ASSOC_LEAVE:
-                  // TODO: Disconnected voluntary
-                  break;
-                default:
-                  observable_main_event = main_event::event_disconnected;
-                  break;
-              }
-              break;
-            case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-              observable_main_event = main_event::event_connected;
-              break;
-            case ARDUINO_EVENT_WIFI_STA_STOP:
-              observable_main_event = main_event::event_connect_failed;
-              break;
-          } });
-
-  // State machine
-  observable_main_event
-      //.Distinct()
-      .Reduce<main_state>(
-          [](main_state state, main_event event)
-          {
-            log_i("State: %s, Event: %s", main_state_string[state], main_event_string[event]);
-            switch (state)
-            {
-            case state_disconnected:
-              screen.reset(new screen_connecting(&observable_wifi_status));
-              state = state_connecting;
-              break;
-            case state_connecting:
-              switch (event)
-              {
-              case event_connected:
-                screen.reset(new screen_main());
-                state = state_main;
-                break;
-              case event_connect_failed:
-                screen.reset(new screen_settings());
-                state = state_configure;
-                break;
-              }
-              break;
-            case state_configure:
-              switch (event)
-              {
-              case event_configured:
-                state = state_disconnected;
-                break;
-              }
-              break;
-            case state_main:
-              break;
-            }
-            log_i("State: %s", main_state_string[state]);
-            return state;
-          },
-          state_disconnected)
-      .Do([](main_state state)
-          { observable_main_state = state; });
+  ui_init();
 
   WiFi.setAutoReconnect(false);
   // WiFi.begin("xxx", "yy");
-  WiFi.begin();
-
-  // Allow over the air updates
-  ArduinoOTA.begin();
+  // WiFi.begin();
 
   // Set the time servers
   configTime(0, 0, "pool.ntp.org");
@@ -154,11 +51,118 @@ void loop()
 {
   // put your main code here, to run repeatedly:
   // Handle display/touch
+  lv_timer_handler();
+}
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+  void OnSplashScreenLoaded(lv_event_t *e)
   {
-    const std::lock_guard<std::recursive_mutex> lock(lvgl_mutex);
-    lv_timer_handler();
+    log_i("OnSplashScreenLoaded");
+    Preferences preferences;
+    preferences.begin(PREFERENCES_NAMESPACE, true);
+
+    if (preferences.isKey(PREFERENCE_WIFI_SSID) && preferences.isKey(PREFERENCE_WIFI_PASSWORD))
+    {
+      auto wifi_ssid = preferences.getString(PREFERENCE_WIFI_SSID);
+      log_i("Preference loaded " PREFERENCE_WIFI_SSID ": %s", wifi_ssid.c_str());
+      auto wifi_password = preferences.getString(PREFERENCE_WIFI_PASSWORD);
+      log_i("Preference loaded " PREFERENCE_WIFI_PASSWORD": %s", wifi_password.c_str());
+      if (wifi_ssid.length() > 0)
+      {
+        // WiFi.begin(wifi_ssid, wifi_password);
+        // if (WiFi.waitForConnectResult() == WL_CONNECTED)
+        // {
+        //   log_i("Connected");
+        // }
+        ;
+      }
+    }
+
+    //     lv_disp_load_scr(ui_Settings);
+    _ui_screen_change(&ui_Settings, LV_SCR_LOAD_ANIM_NONE, 500, 0, &ui_Settings_screen_init);
   }
 
-  // Handle OTA
-  ArduinoOTA.handle();
-}
+  void OnSettingsScreenLoaded(lv_event_t *e)
+  {
+    log_i("OnSettingsScreenLoaded");
+
+    Preferences preferences;
+    preferences.begin(PREFERENCES_NAMESPACE, true);
+
+    String values;
+    auto num_networks = WiFi.scanNetworks();
+    if (num_networks)
+    {
+      auto scan_info = (wifi_ap_record_t *)WiFi.getScanInfoByIndex(0);
+      std::vector<wifi_ap_record_t> networks(scan_info, &scan_info[num_networks]);
+      // Sort by highest rssi
+      // std::sort(networks.begin(), networks.end(), [](const wifi_ap_record_t* e1, const wifi_ap_record_t* e2)
+      //            { return e1->rssi > e2->rssi; });
+      // Remove duplicates
+      // std::remove_if(networks.begin(), networks.end(), []((const wifi_ap_record_t* e){std::find(networks.begin(), networks.end(), )} );
+
+      for (auto network : networks)
+      {
+        if (values.length())
+          values += "\n";
+
+        values += String(reinterpret_cast<const char *>(network.ssid));
+      }
+
+      lv_dropdown_set_options(ui_SettingsWifiSsidDropdown, values.c_str());
+    }
+  }
+
+  void OnSettingsOkClicked(lv_event_t *e)
+  {
+    log_i("OnSettingsOkClicked");
+
+    WiFi.setAutoConnect(false);
+    WiFi.disconnect();
+
+    Preferences preferences;
+    preferences.begin(PREFERENCES_NAMESPACE, false);
+
+    char wifi_ssid[64];
+    lv_dropdown_get_selected_str(ui_SettingsWifiSsidDropdown, wifi_ssid, sizeof(wifi_ssid));
+    preferences.putString(PREFERENCE_WIFI_SSID, wifi_ssid);
+    log_i("Preference saved " PREFERENCE_WIFI_SSID ": %s", wifi_ssid);
+    auto wifi_password = lv_textarea_get_text(ui_SettingsWifiPassword);
+    preferences.putString(PREFERENCE_WIFI_PASSWORD, wifi_password);
+    log_i("Preference saved " PREFERENCE_WIFI_PASSWORD ": %s", wifi_ssid);
+
+    _ui_screen_change(&ui_Spash, LV_SCR_LOAD_ANIM_NONE, 500, 0, &ui_Spash_screen_init);
+  }
+
+  void OnCitySearchValueChanged(lv_event_t *e)
+  {
+    // Get value
+    auto value = lv_textarea_get_text(e->current_target);
+    log_i("Value: %s", value);
+    city_t key{.name = value};
+    auto city = (city_t *)std::bsearch(&key, &cities, sizeof(cities) / sizeof(city_t), sizeof(city_t), [](const void *e1, const void *e2)
+                                       { return strcasecmp(((city_t *)e1)->name, ((city_t *)e2)->name); });
+    if (city)
+    {
+      log_i("Found city: %s", city->name);
+      auto cityFound = String(city->name) + " (" + String(countries[city->country].name) + ")";
+      lv_label_set_text(ui_LabelCityFound, cityFound.c_str());
+      auto latlong = format_gps_location(city->latitude, city->longitude);
+      lv_label_set_text(ui_LabelLatLong, latlong.c_str());
+    }
+    else
+    {
+      lv_label_set_text(ui_LabelCityFound, "");
+      lv_label_set_text(ui_LabelLatLong, "");
+    }
+  }
+
+  void OnSliderRangeClicked(lv_event_t *e) {}
+  void OnSwitchImperialClicked(lv_event_t *e) {}
+
+#ifdef __cplusplus
+} /*extern "C"*/
+#endif
