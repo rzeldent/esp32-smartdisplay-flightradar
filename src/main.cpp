@@ -1,7 +1,10 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
+#include <string>
+#include <list>
 #include <vector>
+#include <unordered_set>
 
 #include <esp32_smartdisplay.h>
 #include <ui/ui.h>
@@ -28,6 +31,7 @@ void setup()
   log_i("SDK version: %s", ESP.getSdkVersion());
 
   smartdisplay_init();
+
   auto disp = lv_disp_get_default();
   lv_disp_set_rotation(disp, LV_DISP_ROT_90);
 
@@ -58,6 +62,11 @@ void loop()
 extern "C"
 {
 #endif
+  void OnCalibrateClicked(lv_event_t *e)
+  {
+    log_i("OnClicked");
+  }
+
   void OnSplashScreenLoaded(lv_event_t *e)
   {
     log_i("OnSplashScreenLoaded");
@@ -69,15 +78,16 @@ extern "C"
       auto wifi_ssid = preferences.getString(PREFERENCE_WIFI_SSID);
       log_i("Preference loaded " PREFERENCE_WIFI_SSID ": %s", wifi_ssid.c_str());
       auto wifi_password = preferences.getString(PREFERENCE_WIFI_PASSWORD);
-      log_i("Preference loaded " PREFERENCE_WIFI_PASSWORD": %s", wifi_password.c_str());
+      log_i("Preference loaded " PREFERENCE_WIFI_PASSWORD ": %s", wifi_password.c_str());
       if (wifi_ssid.length() > 0)
       {
-        // WiFi.begin(wifi_ssid, wifi_password);
-        // if (WiFi.waitForConnectResult() == WL_CONNECTED)
-        // {
-        //   log_i("Connected");
-        // }
-        ;
+        WiFi.begin(wifi_ssid, wifi_password);
+        if (WiFi.waitForConnectResult() == WL_CONNECTED)
+        {
+          log_i("Connected");
+          _ui_screen_change(&ui_Main, LV_SCR_LOAD_ANIM_NONE, 500, 0, &ui_Main_screen_init);
+          return;
+        }
       }
     }
 
@@ -92,28 +102,57 @@ extern "C"
     Preferences preferences;
     preferences.begin(PREFERENCES_NAMESPACE, true);
 
-    String values;
+    auto wifi_ssid = preferences.getString(PREFERENCE_WIFI_SSID);
+    auto wifi_password = preferences.getString(PREFERENCE_WIFI_PASSWORD);
+
+    std::list<std::string> ssids;
+    // Make sure original ssid is at the top
+    if (wifi_ssid.length())
+      ssids.push_back(wifi_ssid.c_str());
+
     auto num_networks = WiFi.scanNetworks();
     if (num_networks)
     {
       auto scan_info = (wifi_ap_record_t *)WiFi.getScanInfoByIndex(0);
       std::vector<wifi_ap_record_t> networks(scan_info, &scan_info[num_networks]);
       // Sort by highest rssi
-      // std::sort(networks.begin(), networks.end(), [](const wifi_ap_record_t* e1, const wifi_ap_record_t* e2)
-      //            { return e1->rssi > e2->rssi; });
+      std::sort(networks.begin(), networks.end(), [&](const wifi_ap_record_t &e1, const wifi_ap_record_t &e2)
+                { return e1.rssi > e2.rssi; });
+
       // Remove duplicates
-      // std::remove_if(networks.begin(), networks.end(), []((const wifi_ap_record_t* e){std::find(networks.begin(), networks.end(), )} );
-
-      for (auto network : networks)
+      for (const auto &network : networks)
       {
-        if (values.length())
-          values += "\n";
-
-        values += String(reinterpret_cast<const char *>(network.ssid));
+        std::string ssid((const char *)network.ssid, sizeof(wifi_ap_record_t::ssid));
+        auto it = std::find_if(ssids.cbegin(), ssids.cend(), [&](const std::string &e)
+                               { return e == ssid; });
+        if (it == ssids.cend())
+          ssids.push_back(ssid);
       }
-
-      lv_dropdown_set_options(ui_SettingsWifiSsidDropdown, values.c_str());
     }
+
+    // Create options for dropdown
+    std::string options;
+    for (const auto &it : ssids)
+    {
+      if (!options.empty())
+        options.append("\n");
+
+      options.append(it.c_str());
+    }
+
+    log_i("options: %s", options.c_str());
+    // WiFi
+    lv_dropdown_set_options(ui_WifiSsidDropdown, options.c_str());
+    lv_textarea_set_text(ui_WifiPasswordTextArea, wifi_password.c_str());
+
+    auto location_city = preferences.getString(PREFERENCE_LOCATION_CITY);
+    lv_textarea_set_text(ui_LocationSearchTextArea, location_city.c_str());
+
+    auto settings_range = preferences.getUInt(PREFERENCE_SETTINGS_RANGE);
+    lv_slider_set_value(ui_SettingsRangeSlider, settings_range, LV_ANIM_OFF);
+
+    auto settings_imperial = preferences.getBool(PREFERENCE_SETTINGS_IMPERIAL);
+    settings_imperial ? lv_obj_add_state(ui_SettingsImperialSwitch, LV_STATE_CHECKED) : lv_obj_clear_state(ui_SettingsImperialSwitch, LV_STATE_CHECKED);
   }
 
   void OnSettingsOkClicked(lv_event_t *e)
@@ -126,13 +165,25 @@ extern "C"
     Preferences preferences;
     preferences.begin(PREFERENCES_NAMESPACE, false);
 
+    // WiFi
     char wifi_ssid[64];
-    lv_dropdown_get_selected_str(ui_SettingsWifiSsidDropdown, wifi_ssid, sizeof(wifi_ssid));
+    lv_dropdown_get_selected_str(ui_WifiSsidDropdown, wifi_ssid, sizeof(wifi_ssid));
     preferences.putString(PREFERENCE_WIFI_SSID, wifi_ssid);
     log_i("Preference saved " PREFERENCE_WIFI_SSID ": %s", wifi_ssid);
-    auto wifi_password = lv_textarea_get_text(ui_SettingsWifiPassword);
+    auto wifi_password = lv_textarea_get_text(ui_WifiPasswordTextArea);
     preferences.putString(PREFERENCE_WIFI_PASSWORD, wifi_password);
-    log_i("Preference saved " PREFERENCE_WIFI_PASSWORD ": %s", wifi_ssid);
+    log_i("Preference saved " PREFERENCE_WIFI_PASSWORD ": %s", wifi_password);
+    // Location
+    auto location_city = lv_textarea_get_text(ui_LocationSearchTextArea);
+    preferences.putString(PREFERENCE_LOCATION_CITY, location_city);
+    log_i("Preference saved " PREFERENCE_LOCATION_CITY ": %s", location_city);
+    // Settings
+    auto settings_range = lv_slider_get_value(ui_SettingsRangeSlider);
+    preferences.putUInt(PREFERENCE_SETTINGS_RANGE, settings_range);
+    log_i("Preference saved " PREFERENCE_SETTINGS_RANGE ": %d", settings_range);
+    auto settings_imperial = (lv_obj_get_state(ui_SettingsImperialSwitch) & LV_STATE_CHECKED) > 0;
+    preferences.putBool(PREFERENCE_SETTINGS_IMPERIAL, settings_imperial);
+    log_i("Preference saved " PREFERENCE_SETTINGS_IMPERIAL ": %d", settings_imperial);
 
     _ui_screen_change(&ui_Spash, LV_SCR_LOAD_ANIM_NONE, 500, 0, &ui_Spash_screen_init);
   }
@@ -140,22 +191,23 @@ extern "C"
   void OnCitySearchValueChanged(lv_event_t *e)
   {
     // Get value
-    auto value = lv_textarea_get_text(e->current_target);
+    auto value = lv_textarea_get_text(ui_LocationSearchTextArea);
     log_i("Value: %s", value);
     city_t key{.name = value};
+    // Search case insensitive for the city
     auto city = (city_t *)std::bsearch(&key, &cities, sizeof(cities) / sizeof(city_t), sizeof(city_t), [](const void *e1, const void *e2)
                                        { return strcasecmp(((city_t *)e1)->name, ((city_t *)e2)->name); });
     if (city)
     {
       log_i("Found city: %s", city->name);
       auto cityFound = String(city->name) + " (" + String(countries[city->country].name) + ")";
-      lv_label_set_text(ui_LabelCityFound, cityFound.c_str());
+      lv_label_set_text(ui_LocationFoundValueLabel, cityFound.c_str());
       auto latlong = format_gps_location(city->latitude, city->longitude);
       lv_label_set_text(ui_LabelLatLong, latlong.c_str());
     }
     else
     {
-      lv_label_set_text(ui_LabelCityFound, "");
+      lv_label_set_text(ui_LocationFoundValueLabel, "");
       lv_label_set_text(ui_LabelLatLong, "");
     }
   }

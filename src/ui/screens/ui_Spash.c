@@ -9,7 +9,7 @@ void ui_Spash_screen_init(void)
 {
     ui_Spash = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_Spash, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_img_src(ui_Spash, &ui_img_radar320x240_png, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_img_src(ui_Spash, &ui_img_images_radar_png, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_SplashVersion = lv_label_create(ui_Spash);
     lv_obj_set_width(ui_SplashVersion, LV_SIZE_CONTENT);   /// 1

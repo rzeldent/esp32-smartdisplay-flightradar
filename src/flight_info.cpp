@@ -1,35 +1,27 @@
 #include <flight_info.h>
-
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
-#include <esp32-hal-log.h>
-#include <http_status.h>
 
-bool get_flights(float latitude, float longitude, float range_latitude, float range_longitude, bool air, bool ground, bool gliders, bool vehicles, std::list<flight_info> &flights, String &error_message)
+std::list<flight_info> get_flights(float latitude, float longitude, float range_latitude, float range_longitude, bool air, bool ground, bool gliders, bool vehicles)
 {
     const String flight_data_base_url = "http://data-cloud.flightradar24.com/zones/fcgi/feed.js";
     const String bounds = String(latitude + range_latitude / 2.0) + "," + String(latitude - range_latitude / 2.0) + "," + String(longitude - range_longitude / 2.0) + "," + String(longitude + range_longitude / 2.0);
     const String flight_data_url = flight_data_base_url + "?" + "bounds=" + bounds + "&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=" + String(ground) + "&air=" + String(air) + "&vehicles=" + String(vehicles) + "&estimated=1&maxage=14400&gliders=" + String(gliders) + "&stats=0";
 
-    flights.clear();
-    error_message = "";
-
     HTTPClient client;
     log_i("Request states=%s", flight_data_url.c_str());
     if (!client.begin(flight_data_url))
     {
-        error_message = "Failed to start client. DNS/TCP error?";
-        log_e("%s", error_message.c_str());
-        return false;
+        log_w("Failed to start client. DNS/TCP error?");
+        return std::list<flight_info>();
     }
 
     const auto httpResultCode = client.GET();
     if (httpResultCode != HTTP_CODE_OK)
     {
         client.end();
-        error_message = String(httpResultCode) + " " + (httpResultCode < 0 ? client.errorToString(httpResultCode) : http_status_reason(httpResultCode));
-        log_e("HTTP error: %d (%s)", httpResultCode, error_message);
-        return false;
+        log_w("HTTP error: %d", httpResultCode);
+        return std::list<flight_info>();
     }
 
     auto response = client.getString();
@@ -41,12 +33,12 @@ bool get_flights(float latitude, float longitude, float range_latitude, float ra
     {
         client.end();
         log_e("Deserialize. Error=%s", error.c_str());
-        error_message = error.c_str();
-        return false;
+        return std::list<flight_info>();
     }
 
     client.end();
 
+    std::list<flight_info> flights;
     auto flight_data_root = doc_flight_data.as<JsonObject>();
     for (const auto &kvp : flight_data_root)
     {
@@ -79,7 +71,7 @@ bool get_flights(float latitude, float longitude, float range_latitude, float ra
         flights.push_back(flight);
     }
 
-    return true;
+    return flights;
 }
 
 String flight_info::toString() const

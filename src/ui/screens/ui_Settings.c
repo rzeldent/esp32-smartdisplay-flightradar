@@ -19,77 +19,79 @@ void ui_Settings_screen_init(void)
 
     ui_TabPageWifi = lv_tabview_add_tab(ui_TabViewSettings, "WiFi");
 
-    ui_SettingsWifiSsid = lv_label_create(ui_TabPageWifi);
-    lv_obj_set_width(ui_SettingsWifiSsid, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_SettingsWifiSsid, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_SettingsWifiSsid, 0);
-    lv_obj_set_y(ui_SettingsWifiSsid, 10);
-    lv_label_set_text(ui_SettingsWifiSsid, "SSID:");
+    ui_WifiSsidLabel = lv_label_create(ui_TabPageWifi);
+    lv_obj_set_width(ui_WifiSsidLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_WifiSsidLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_WifiSsidLabel, 0);
+    lv_obj_set_y(ui_WifiSsidLabel, 10);
+    lv_label_set_text(ui_WifiSsidLabel, "SSID:");
 
-    ui_SettingsWifiSsidDropdown = lv_dropdown_create(ui_TabPageWifi);
-    lv_obj_set_width(ui_SettingsWifiSsidDropdown, 200);
-    lv_obj_set_height(ui_SettingsWifiSsidDropdown, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_SettingsWifiSsidDropdown, LV_ALIGN_TOP_RIGHT);
-    lv_obj_add_flag(ui_SettingsWifiSsidDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    ui_WifiSsidDropdown = lv_dropdown_create(ui_TabPageWifi);
+    lv_dropdown_set_options(ui_WifiSsidDropdown, "Searching...");
+    lv_obj_set_width(ui_WifiSsidDropdown, 200);
+    lv_obj_set_height(ui_WifiSsidDropdown, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_WifiSsidDropdown, LV_ALIGN_TOP_RIGHT);
+    lv_obj_add_flag(ui_WifiSsidDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
 
 
 
-    ui_SettingsWifiPassword = lv_label_create(ui_TabPageWifi);
-    lv_obj_set_width(ui_SettingsWifiPassword, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_SettingsWifiPassword, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_SettingsWifiPassword, 0);
-    lv_obj_set_y(ui_SettingsWifiPassword, 45);
-    lv_label_set_text(ui_SettingsWifiPassword, "Password:");
+    ui_WifiPasswordLabel = lv_label_create(ui_TabPageWifi);
+    lv_obj_set_width(ui_WifiPasswordLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_WifiPasswordLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_WifiPasswordLabel, 0);
+    lv_obj_set_y(ui_WifiPasswordLabel, 45);
+    lv_label_set_text(ui_WifiPasswordLabel, "Password:");
 
-    ui_SettingsWifiPasswordTextArea = lv_textarea_create(ui_TabPageWifi);
-    lv_obj_set_width(ui_SettingsWifiPasswordTextArea, 200);
-    lv_obj_set_height(ui_SettingsWifiPasswordTextArea, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_SettingsWifiPasswordTextArea, 0);
-    lv_obj_set_y(ui_SettingsWifiPasswordTextArea, 35);
-    lv_obj_set_align(ui_SettingsWifiPasswordTextArea, LV_ALIGN_TOP_RIGHT);
-    lv_textarea_set_max_length(ui_SettingsWifiPasswordTextArea, 63);
-    lv_textarea_set_placeholder_text(ui_SettingsWifiPasswordTextArea, "Placeholder...");
-    lv_textarea_set_password_mode(ui_SettingsWifiPasswordTextArea, true);
+    ui_WifiPasswordTextArea = lv_textarea_create(ui_TabPageWifi);
+    lv_obj_set_width(ui_WifiPasswordTextArea, 200);
+    lv_obj_set_height(ui_WifiPasswordTextArea, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_WifiPasswordTextArea, 0);
+    lv_obj_set_y(ui_WifiPasswordTextArea, 35);
+    lv_obj_set_align(ui_WifiPasswordTextArea, LV_ALIGN_TOP_RIGHT);
+    lv_textarea_set_max_length(ui_WifiPasswordTextArea, 63);
+    lv_textarea_set_placeholder_text(ui_WifiPasswordTextArea, "Placeholder...");
+    lv_textarea_set_one_line(ui_WifiPasswordTextArea, true);
+    lv_textarea_set_password_mode(ui_WifiPasswordTextArea, true);
 
 
 
     ui_TabPageLocation = lv_tabview_add_tab(ui_TabViewSettings, "Location");
 
-    ui_Label6 = lv_label_create(ui_TabPageLocation);
-    lv_obj_set_width(ui_Label6, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label6, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label6, 0);
-    lv_obj_set_y(ui_Label6, 10);
-    lv_label_set_text(ui_Label6, "Search:");
+    ui_LocationSearchLabel = lv_label_create(ui_TabPageLocation);
+    lv_obj_set_width(ui_LocationSearchLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_LocationSearchLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_LocationSearchLabel, 0);
+    lv_obj_set_y(ui_LocationSearchLabel, 10);
+    lv_label_set_text(ui_LocationSearchLabel, "Search:");
 
-    ui_TextAreaCitySearch = lv_textarea_create(ui_TabPageLocation);
-    lv_obj_set_width(ui_TextAreaCitySearch, 220);
-    lv_obj_set_height(ui_TextAreaCitySearch, LV_SIZE_CONTENT);    /// 70
-    lv_obj_set_align(ui_TextAreaCitySearch, LV_ALIGN_TOP_RIGHT);
-    lv_textarea_set_placeholder_text(ui_TextAreaCitySearch, "Placeholder...");
+    ui_LocationSearchTextArea = lv_textarea_create(ui_TabPageLocation);
+    lv_obj_set_width(ui_LocationSearchTextArea, 220);
+    lv_obj_set_height(ui_LocationSearchTextArea, LV_SIZE_CONTENT);    /// 70
+    lv_obj_set_align(ui_LocationSearchTextArea, LV_ALIGN_TOP_RIGHT);
+    lv_textarea_set_placeholder_text(ui_LocationSearchTextArea, "Type location to start search");
 
 
 
-    ui_Label5 = lv_label_create(ui_TabPageLocation);
-    lv_obj_set_width(ui_Label5, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label5, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label5, 0);
-    lv_obj_set_y(ui_Label5, 45);
-    lv_label_set_text(ui_Label5, "Found:");
+    ui_LocationFoundLabel = lv_label_create(ui_TabPageLocation);
+    lv_obj_set_width(ui_LocationFoundLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_LocationFoundLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_LocationFoundLabel, 0);
+    lv_obj_set_y(ui_LocationFoundLabel, 45);
+    lv_label_set_text(ui_LocationFoundLabel, "Found:");
 
-    ui_LabelCityFound = lv_label_create(ui_TabPageLocation);
-    lv_obj_set_width(ui_LabelCityFound, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_LabelCityFound, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_LabelCityFound, 80);
-    lv_obj_set_y(ui_LabelCityFound, 45);
-    lv_label_set_text(ui_LabelCityFound, "-");
+    ui_LocationFoundValueLabel = lv_label_create(ui_TabPageLocation);
+    lv_obj_set_width(ui_LocationFoundValueLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_LocationFoundValueLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_LocationFoundValueLabel, 80);
+    lv_obj_set_y(ui_LocationFoundValueLabel, 45);
+    lv_label_set_text(ui_LocationFoundValueLabel, "-");
 
-    ui_Label3 = lv_label_create(ui_TabPageLocation);
-    lv_obj_set_width(ui_Label3, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label3, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label3, 0);
-    lv_obj_set_y(ui_Label3, 80);
-    lv_label_set_text(ui_Label3, "Lat/Long:");
+    ui_LocationLatLonLabel = lv_label_create(ui_TabPageLocation);
+    lv_obj_set_width(ui_LocationLatLonLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_LocationLatLonLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_LocationLatLonLabel, 0);
+    lv_obj_set_y(ui_LocationLatLonLabel, 80);
+    lv_label_set_text(ui_LocationLatLonLabel, "Lat/Long:");
 
     ui_LabelLatLong = lv_label_create(ui_TabPageLocation);
     lv_obj_set_width(ui_LabelLatLong, LV_SIZE_CONTENT);   /// 1
@@ -100,49 +102,65 @@ void ui_Settings_screen_init(void)
 
     ui_TabPageSettings = lv_tabview_add_tab(ui_TabViewSettings, "Settings");
 
-    ui_Label21 = lv_label_create(ui_TabPageSettings);
-    lv_obj_set_width(ui_Label21, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label21, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label21, 0);
-    lv_obj_set_y(ui_Label21, 10);
-    lv_label_set_text(ui_Label21, "Range:");
+    ui_SettingsRangeLabel = lv_label_create(ui_TabPageSettings);
+    lv_obj_set_width(ui_SettingsRangeLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_SettingsRangeLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_SettingsRangeLabel, 0);
+    lv_obj_set_y(ui_SettingsRangeLabel, 10);
+    lv_label_set_text(ui_SettingsRangeLabel, "Range:");
 
-    ui_LabelRange = lv_label_create(ui_TabPageSettings);
-    lv_obj_set_width(ui_LabelRange, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_LabelRange, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_LabelRange, 60);
-    lv_obj_set_y(ui_LabelRange, 10);
-    lv_label_set_text(ui_LabelRange, "-");
+    ui_SettingsRange = lv_label_create(ui_TabPageSettings);
+    lv_obj_set_width(ui_SettingsRange, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_SettingsRange, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_SettingsRange, 60);
+    lv_obj_set_y(ui_SettingsRange, 10);
+    lv_label_set_text(ui_SettingsRange, "-");
 
-    ui_LabelUnits = lv_label_create(ui_TabPageSettings);
-    lv_obj_set_width(ui_LabelUnits, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_LabelUnits, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_LabelUnits, 100);
-    lv_obj_set_y(ui_LabelUnits, 10);
-    lv_label_set_text(ui_LabelUnits, "-");
+    ui_SettingsUnitsLabel = lv_label_create(ui_TabPageSettings);
+    lv_obj_set_width(ui_SettingsUnitsLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_SettingsUnitsLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_SettingsUnitsLabel, 100);
+    lv_obj_set_y(ui_SettingsUnitsLabel, 10);
+    lv_label_set_text(ui_SettingsUnitsLabel, "-");
 
-    ui_SliderRange = lv_slider_create(ui_TabPageSettings);
-    lv_obj_set_width(ui_SliderRange, 150);
-    lv_obj_set_height(ui_SliderRange, 10);
-    lv_obj_set_y(ui_SliderRange, 10);
-    lv_obj_set_x(ui_SliderRange, lv_pct(0));
-    lv_obj_set_align(ui_SliderRange, LV_ALIGN_TOP_RIGHT);
+    ui_SettingsRangeSlider = lv_slider_create(ui_TabPageSettings);
+    lv_slider_set_range(ui_SettingsRangeSlider, 5, 50);
+    lv_obj_set_width(ui_SettingsRangeSlider, 150);
+    lv_obj_set_height(ui_SettingsRangeSlider, 10);
+    lv_obj_set_y(ui_SettingsRangeSlider, 10);
+    lv_obj_set_x(ui_SettingsRangeSlider, lv_pct(0));
+    lv_obj_set_align(ui_SettingsRangeSlider, LV_ALIGN_TOP_RIGHT);
 
 
-    ui_LabelImperial = lv_label_create(ui_TabPageSettings);
-    lv_obj_set_width(ui_LabelImperial, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_LabelImperial, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_LabelImperial, 0);
-    lv_obj_set_y(ui_LabelImperial, 45);
-    lv_label_set_text(ui_LabelImperial, "Imperial units:");
+    ui_SettingsImperialLabel = lv_label_create(ui_TabPageSettings);
+    lv_obj_set_width(ui_SettingsImperialLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_SettingsImperialLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_SettingsImperialLabel, 0);
+    lv_obj_set_y(ui_SettingsImperialLabel, 45);
+    lv_label_set_text(ui_SettingsImperialLabel, "Imperial units:");
 
-    ui_SwitchImperial = lv_switch_create(ui_TabPageSettings);
-    lv_obj_set_width(ui_SwitchImperial, 50);
-    lv_obj_set_height(ui_SwitchImperial, 25);
-    lv_obj_set_x(ui_SwitchImperial, 0);
-    lv_obj_set_y(ui_SwitchImperial, 40);
-    lv_obj_set_align(ui_SwitchImperial, LV_ALIGN_TOP_RIGHT);
+    ui_SettingsImperialSwitch = lv_switch_create(ui_TabPageSettings);
+    lv_obj_set_width(ui_SettingsImperialSwitch, 50);
+    lv_obj_set_height(ui_SettingsImperialSwitch, 25);
+    lv_obj_set_x(ui_SettingsImperialSwitch, 0);
+    lv_obj_set_y(ui_SettingsImperialSwitch, 40);
+    lv_obj_set_align(ui_SettingsImperialSwitch, LV_ALIGN_TOP_RIGHT);
 
+
+    ui_SettingsCalibrateButton = lv_btn_create(ui_TabPageSettings);
+    lv_obj_set_width(ui_SettingsCalibrateButton, 100);
+    lv_obj_set_height(ui_SettingsCalibrateButton, 50);
+    lv_obj_set_x(ui_SettingsCalibrateButton, 0);
+    lv_obj_set_y(ui_SettingsCalibrateButton, 70);
+    lv_obj_set_align(ui_SettingsCalibrateButton, LV_ALIGN_TOP_MID);
+    lv_obj_add_flag(ui_SettingsCalibrateButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_SettingsCalibrateButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_SettingsCalibrateButtonLabel = lv_label_create(ui_SettingsCalibrateButton);
+    lv_obj_set_width(ui_SettingsCalibrateButtonLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_SettingsCalibrateButtonLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_SettingsCalibrateButtonLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_SettingsCalibrateButtonLabel, "Calibrate");
 
     ui_ButtonCancel = lv_btn_create(ui_Settings);
     lv_obj_set_width(ui_ButtonCancel, 100);
@@ -176,10 +194,11 @@ void ui_Settings_screen_init(void)
     lv_obj_set_align(ui_Keyboard2, LV_ALIGN_BOTTOM_MID);
     lv_obj_add_flag(ui_Keyboard2, LV_OBJ_FLAG_HIDDEN);     /// Flags
 
-    lv_obj_add_event_cb(ui_SettingsWifiPasswordTextArea, ui_event_SettingsWifiPasswordTextArea, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_TextAreaCitySearch, ui_event_TextAreaCitySearch, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_SliderRange, ui_event_SliderRange, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_SwitchImperial, ui_event_SwitchImperial, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_WifiPasswordTextArea, ui_event_WifiPasswordTextArea, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_LocationSearchTextArea, ui_event_LocationSearchTextArea, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_SettingsRangeSlider, ui_event_SettingsRangeSlider, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_SettingsImperialSwitch, ui_event_SettingsImperialSwitch, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_SettingsCalibrateButton, ui_event_SettingsCalibrateButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ButtonCancel, ui_event_ButtonCancel, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ButtonOk, ui_event_ButtonOk, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Keyboard2, ui_event_Keyboard2, LV_EVENT_ALL, NULL);

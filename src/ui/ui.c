@@ -23,28 +23,31 @@ void ui_event_Settings(lv_event_t * e);
 lv_obj_t * ui_Settings;
 lv_obj_t * ui_TabViewSettings;
 lv_obj_t * ui_TabPageWifi;
-lv_obj_t * ui_SettingsWifiSsid;
-lv_obj_t * ui_SettingsWifiSsidDropdown;
-lv_obj_t * ui_SettingsWifiPassword;
-void ui_event_SettingsWifiPasswordTextArea(lv_event_t * e);
-lv_obj_t * ui_SettingsWifiPasswordTextArea;
+lv_obj_t * ui_WifiSsidLabel;
+lv_obj_t * ui_WifiSsidDropdown;
+lv_obj_t * ui_WifiPasswordLabel;
+void ui_event_WifiPasswordTextArea(lv_event_t * e);
+lv_obj_t * ui_WifiPasswordTextArea;
 lv_obj_t * ui_TabPageLocation;
-lv_obj_t * ui_Label6;
-void ui_event_TextAreaCitySearch(lv_event_t * e);
-lv_obj_t * ui_TextAreaCitySearch;
-lv_obj_t * ui_Label5;
-lv_obj_t * ui_LabelCityFound;
-lv_obj_t * ui_Label3;
+lv_obj_t * ui_LocationSearchLabel;
+void ui_event_LocationSearchTextArea(lv_event_t * e);
+lv_obj_t * ui_LocationSearchTextArea;
+lv_obj_t * ui_LocationFoundLabel;
+lv_obj_t * ui_LocationFoundValueLabel;
+lv_obj_t * ui_LocationLatLonLabel;
 lv_obj_t * ui_LabelLatLong;
 lv_obj_t * ui_TabPageSettings;
-lv_obj_t * ui_Label21;
-lv_obj_t * ui_LabelRange;
-lv_obj_t * ui_LabelUnits;
-void ui_event_SliderRange(lv_event_t * e);
-lv_obj_t * ui_SliderRange;
-lv_obj_t * ui_LabelImperial;
-void ui_event_SwitchImperial(lv_event_t * e);
-lv_obj_t * ui_SwitchImperial;
+lv_obj_t * ui_SettingsRangeLabel;
+lv_obj_t * ui_SettingsRange;
+lv_obj_t * ui_SettingsUnitsLabel;
+void ui_event_SettingsRangeSlider(lv_event_t * e);
+lv_obj_t * ui_SettingsRangeSlider;
+lv_obj_t * ui_SettingsImperialLabel;
+void ui_event_SettingsImperialSwitch(lv_event_t * e);
+lv_obj_t * ui_SettingsImperialSwitch;
+void ui_event_SettingsCalibrateButton(lv_event_t * e);
+lv_obj_t * ui_SettingsCalibrateButton;
+lv_obj_t * ui_SettingsCalibrateButtonLabel;
 void ui_event_ButtonCancel(lv_event_t * e);
 lv_obj_t * ui_ButtonCancel;
 lv_obj_t * ui_ButtonCancelLabel;
@@ -60,8 +63,15 @@ void ui_Main_screen_init(void);
 lv_obj_t * ui_Main;
 lv_obj_t * ui_FlightLabel;
 lv_obj_t * ui_Flight;
+lv_obj_t * ui_Button2;
+void ui_event_Label3(lv_event_t * e);
+lv_obj_t * ui_Label3;
+
+
+// SCREEN: ui_Calibrate
+void ui_Calibrate_screen_init(void);
+lv_obj_t * ui_Calibrate;
 lv_obj_t * ui____initial_actions0;
-const lv_img_dsc_t * ui_imgset_radar320x[1] = {&ui_img_radar320x240_png};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -90,19 +100,22 @@ void ui_event_Settings(lv_event_t * e)
         OnSettingsScreenLoaded(e);
     }
 }
-void ui_event_SettingsWifiPasswordTextArea(lv_event_t * e)
+void ui_event_WifiPasswordTextArea(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_FOCUSED) {
-        _ui_keyboard_set_target(ui_Keyboard2,  ui_SettingsWifiPasswordTextArea);
+        _ui_keyboard_set_target(ui_Keyboard2,  ui_WifiPasswordTextArea);
         _ui_flag_modify(ui_Keyboard2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
     }
     if(event_code == LV_EVENT_DEFOCUSED) {
         _ui_flag_modify(ui_Keyboard2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
+    if(event_code == LV_EVENT_KEY &&  lv_event_get_key(e) == LV_KEY_ENTER) {
+        _ui_flag_modify(ui_Keyboard2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
 }
-void ui_event_TextAreaCitySearch(lv_event_t * e)
+void ui_event_LocationSearchTextArea(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
@@ -111,26 +124,37 @@ void ui_event_TextAreaCitySearch(lv_event_t * e)
     }
     if(event_code == LV_EVENT_FOCUSED) {
         _ui_flag_modify(ui_Keyboard2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
-        _ui_keyboard_set_target(ui_Keyboard2,  ui_TextAreaCitySearch);
+        _ui_keyboard_set_target(ui_Keyboard2,  ui_LocationSearchTextArea);
     }
     if(event_code == LV_EVENT_DEFOCUSED) {
         _ui_flag_modify(ui_Keyboard2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
-void ui_event_SliderRange(lv_event_t * e)
+void ui_event_SettingsRangeSlider(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_CLICKED) {
-        OnSliderRangeClicked(e);
+    if(event_code == LV_EVENT_VALUE_CHANGED) {
+        _ui_slider_set_text_value(ui_SettingsRange, target, "", "");
     }
 }
-void ui_event_SwitchImperial(lv_event_t * e)
+void ui_event_SettingsImperialSwitch(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_VALUE_CHANGED &&  lv_obj_has_state(target, LV_STATE_CHECKED)) {
+        _ui_label_set_property(ui_SettingsUnitsLabel, _UI_LABEL_PROPERTY_TEXT, "Mi");
+    }
+    if(event_code == LV_EVENT_VALUE_CHANGED &&  !lv_obj_has_state(target, LV_STATE_CHECKED)) {
+        _ui_label_set_property(ui_SettingsUnitsLabel, _UI_LABEL_PROPERTY_TEXT, "Km");
+    }
+}
+void ui_event_SettingsCalibrateButton(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
-        OnSwitchImperialClicked(e);
+        OnCalibrateClicked(e);
     }
 }
 void ui_event_ButtonCancel(lv_event_t * e)
@@ -157,6 +181,14 @@ void ui_event_Keyboard2(lv_event_t * e)
         _ui_flag_modify(ui_Keyboard2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
     }
 }
+void ui_event_Label3(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        _ui_screen_change(&ui_Settings, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_Settings_screen_init);
+    }
+}
 
 ///////////////////// SCREENS ////////////////////
 
@@ -169,6 +201,7 @@ void ui_init(void)
     ui_Spash_screen_init();
     ui_Settings_screen_init();
     ui_Main_screen_init();
+    ui_Calibrate_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_Spash);
 }

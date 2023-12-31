@@ -26,28 +26,31 @@ void ui_event_Settings(lv_event_t * e);
 extern lv_obj_t * ui_Settings;
 extern lv_obj_t * ui_TabViewSettings;
 extern lv_obj_t * ui_TabPageWifi;
-extern lv_obj_t * ui_SettingsWifiSsid;
-extern lv_obj_t * ui_SettingsWifiSsidDropdown;
-extern lv_obj_t * ui_SettingsWifiPassword;
-void ui_event_SettingsWifiPasswordTextArea(lv_event_t * e);
-extern lv_obj_t * ui_SettingsWifiPasswordTextArea;
+extern lv_obj_t * ui_WifiSsidLabel;
+extern lv_obj_t * ui_WifiSsidDropdown;
+extern lv_obj_t * ui_WifiPasswordLabel;
+void ui_event_WifiPasswordTextArea(lv_event_t * e);
+extern lv_obj_t * ui_WifiPasswordTextArea;
 extern lv_obj_t * ui_TabPageLocation;
-extern lv_obj_t * ui_Label6;
-void ui_event_TextAreaCitySearch(lv_event_t * e);
-extern lv_obj_t * ui_TextAreaCitySearch;
-extern lv_obj_t * ui_Label5;
-extern lv_obj_t * ui_LabelCityFound;
-extern lv_obj_t * ui_Label3;
+extern lv_obj_t * ui_LocationSearchLabel;
+void ui_event_LocationSearchTextArea(lv_event_t * e);
+extern lv_obj_t * ui_LocationSearchTextArea;
+extern lv_obj_t * ui_LocationFoundLabel;
+extern lv_obj_t * ui_LocationFoundValueLabel;
+extern lv_obj_t * ui_LocationLatLonLabel;
 extern lv_obj_t * ui_LabelLatLong;
 extern lv_obj_t * ui_TabPageSettings;
-extern lv_obj_t * ui_Label21;
-extern lv_obj_t * ui_LabelRange;
-extern lv_obj_t * ui_LabelUnits;
-void ui_event_SliderRange(lv_event_t * e);
-extern lv_obj_t * ui_SliderRange;
-extern lv_obj_t * ui_LabelImperial;
-void ui_event_SwitchImperial(lv_event_t * e);
-extern lv_obj_t * ui_SwitchImperial;
+extern lv_obj_t * ui_SettingsRangeLabel;
+extern lv_obj_t * ui_SettingsRange;
+extern lv_obj_t * ui_SettingsUnitsLabel;
+void ui_event_SettingsRangeSlider(lv_event_t * e);
+extern lv_obj_t * ui_SettingsRangeSlider;
+extern lv_obj_t * ui_SettingsImperialLabel;
+void ui_event_SettingsImperialSwitch(lv_event_t * e);
+extern lv_obj_t * ui_SettingsImperialSwitch;
+void ui_event_SettingsCalibrateButton(lv_event_t * e);
+extern lv_obj_t * ui_SettingsCalibrateButton;
+extern lv_obj_t * ui_SettingsCalibrateButtonLabel;
 void ui_event_ButtonCancel(lv_event_t * e);
 extern lv_obj_t * ui_ButtonCancel;
 extern lv_obj_t * ui_ButtonCancelLabel;
@@ -61,9 +64,15 @@ void ui_Main_screen_init(void);
 extern lv_obj_t * ui_Main;
 extern lv_obj_t * ui_FlightLabel;
 extern lv_obj_t * ui_Flight;
+extern lv_obj_t * ui_Button2;
+void ui_event_Label3(lv_event_t * e);
+extern lv_obj_t * ui_Label3;
+// SCREEN: ui_Calibrate
+void ui_Calibrate_screen_init(void);
+extern lv_obj_t * ui_Calibrate;
 extern lv_obj_t * ui____initial_actions0;
 
-LV_IMG_DECLARE(ui_img_radar320x240_png);    // assets\Radar320x240.png
+LV_IMG_DECLARE(ui_img_images_radar_png);    // assets\images\Radar.png
 
 
 

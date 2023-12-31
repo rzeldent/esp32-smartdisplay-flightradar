@@ -53,6 +53,12 @@
         "condition_variable": "cpp",
         "ratio": "cpp",
         "mutex": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "bitset": "cpp",
+        "regex": "cpp",
+        "set": "cpp",
+        "future": "cpp",
+        "iostream": "cpp",
+        "variant": "cpp"
     }
 }

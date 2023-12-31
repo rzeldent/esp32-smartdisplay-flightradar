@@ -46,3 +46,15 @@ def OnCityNearValueChanged(event_struct):
 def OnCitySearchValueChanged(event_struct):
     return
 
+
+def OnCalibrateClicked(event_struct):
+    return
+
+
+def OnSliderRangeValueChanged(event_struct):
+    return
+
+
+def OnSwitchImperialChecked(event_struct):
+    return
+

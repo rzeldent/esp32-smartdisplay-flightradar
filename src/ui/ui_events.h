@@ -13,8 +13,7 @@ extern "C" {
 void OnSplashScreenLoaded(lv_event_t * e);
 void OnSettingsScreenLoaded(lv_event_t * e);
 void OnCitySearchValueChanged(lv_event_t * e);
-void OnSliderRangeClicked(lv_event_t * e);
-void OnSwitchImperialClicked(lv_event_t * e);
+void OnCalibrateClicked(lv_event_t * e);
 void OnSettingsOkClicked(lv_event_t * e);
 
 #ifdef __cplusplus
