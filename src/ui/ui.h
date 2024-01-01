@@ -62,9 +62,19 @@ extern lv_obj_t * ui_Keyboard2;
 // SCREEN: ui_Main
 void ui_Main_screen_init(void);
 extern lv_obj_t * ui_Main;
-extern lv_obj_t * ui_FlightLabel;
 extern lv_obj_t * ui_Flight;
-extern lv_obj_t * ui_Button2;
+extern lv_obj_t * ui_Altitude;
+extern lv_obj_t * ui_VerticalSpeed;
+extern lv_obj_t * ui_GroundSpeed;
+extern lv_obj_t * ui_LatLon;
+extern lv_obj_t * ui_Heading;
+extern lv_obj_t * ui_Registration;
+extern lv_obj_t * ui_AircraftType;
+extern lv_obj_t * ui_Airline;
+extern lv_obj_t * ui_Origin;
+extern lv_obj_t * ui_Destination;
+void ui_event_SettingsButton(lv_event_t * e);
+extern lv_obj_t * ui_SettingsButton;
 void ui_event_Label3(lv_event_t * e);
 extern lv_obj_t * ui_Label3;
 // SCREEN: ui_Calibrate

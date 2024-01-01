@@ -4,20 +4,23 @@
 #include <string>
 #include <list>
 #include <vector>
-#include <unordered_set>
 
 #include <esp32_smartdisplay.h>
 #include <ui/ui.h>
 
 #include <settings.h>
-
-#include <Preferences.h>
+#include <wifi_scan.h>
 
 #include <airport.h>
 #include <city.h>
 
 #include <format_gps.h>
 #include <format_number.h>
+
+#include <flight_info.h>
+
+// forward declaration
+void display_flights();
 
 void setup()
 {
@@ -51,11 +54,93 @@ void setup()
   configTime(0, 0, "pool.ntp.org");
 }
 
+// put your main code here, to run repeatedly:
 void loop()
 {
-  // put your main code here, to run repeatedly:
   // Handle display/touch
   lv_timer_handler();
+
+  if (WiFi.isConnected())
+  {
+    display_flights();
+  }
+  else
+    ;
+}
+
+// Variables for flight info
+city_t *city;
+unsigned long next_update;
+location_info location;
+// List of flights
+std::list<flight_info> flights;
+// Flight to display
+std::list<flight_info>::const_iterator it = flights.cend();
+
+bool airborne = true;
+bool grounded = false;
+bool gliders = true;
+bool vehicles = false;
+
+// Refresh screen every 10 seconds
+constexpr auto flight_milliseconds = 10 * 1000ul;
+constexpr auto flight_milliseconds_error = 60 * 1000ul;
+constexpr auto flight_milliseconds_noflights = 30 * 1000ul;
+// Allow 4 cycles of each flight
+constexpr auto display_cycles = 4;
+
+void display_flight(std::list<flight_info>::const_iterator it)
+{
+  log_i("flight: %s", it->toString().c_str());
+  lv_label_set_text(ui_Flight, it->flight.c_str());
+
+  lv_label_set_text(ui_Altitude, String(it->altitude).c_str());
+
+  lv_label_set_text(ui_VerticalSpeed, String(it->vertical_speed).c_str());
+
+  lv_label_set_text(ui_GroundSpeed, String(it->ground_speed).c_str());
+
+  lv_label_set_text(ui_LatLon, format_gps_location(it->latitude, it->longitude).c_str());
+
+  lv_label_set_text(ui_Heading, String(it->heading).c_str());
+
+  lv_label_set_text(ui_Registration, it->registration.c_str());
+
+  lv_label_set_text(ui_AircraftType, it->aircraft_code.c_str());
+
+  lv_label_set_text(ui_Airline, it->icao_airline.c_str());
+
+  lv_label_set_text(ui_Origin, it->iata_origin_airport.c_str());
+
+  lv_label_set_text(ui_Destination, it->iata_destination_airport.c_str());
+}
+
+void display_flights()
+{
+  auto now = millis();
+  if (now > next_update)
+  {
+    if (it == flights.cend())
+    {
+      log_i("Updating flights");
+      flights = get_flights(location, airborne, grounded, gliders, vehicles);
+
+      log_i("Number of flights: %d", flights.size());
+      if (flights.empty())
+      {
+        log_d("No flights in range");
+
+        next_update = now + flight_milliseconds_noflights;
+        return;
+      }
+
+      it = flights.cbegin();
+    }
+
+    display_flight(it++);
+
+    next_update = now + flight_milliseconds;
+  }
 }
 
 #ifdef __cplusplus
@@ -70,28 +155,24 @@ extern "C"
   void OnSplashScreenLoaded(lv_event_t *e)
   {
     log_i("OnSplashScreenLoaded");
-    Preferences preferences;
-    preferences.begin(PREFERENCES_NAMESPACE, true);
 
-    if (preferences.isKey(PREFERENCE_WIFI_SSID) && preferences.isKey(PREFERENCE_WIFI_PASSWORD))
+    settings nvram;
+    // Check if settings are valid
+    if (nvram.isValid())
     {
-      auto wifi_ssid = preferences.getString(PREFERENCE_WIFI_SSID);
-      log_i("Preference loaded " PREFERENCE_WIFI_SSID ": %s", wifi_ssid.c_str());
-      auto wifi_password = preferences.getString(PREFERENCE_WIFI_PASSWORD);
-      log_i("Preference loaded " PREFERENCE_WIFI_PASSWORD ": %s", wifi_password.c_str());
-      if (wifi_ssid.length() > 0)
+      // Calculate location
+      city = settings::lookup_city(nvram.location_city_.c_str());
+      location = location_info(city->latitude, city->longitude, nvram.settings_range_, nvram.settings_imperial_units_);
+
+      WiFi.begin(nvram.wifi_ssid_, nvram.wifi_password_);
+      if (WiFi.waitForConnectResult() == WL_CONNECTED)
       {
-        WiFi.begin(wifi_ssid, wifi_password);
-        if (WiFi.waitForConnectResult() == WL_CONNECTED)
-        {
-          log_i("Connected");
-          _ui_screen_change(&ui_Main, LV_SCR_LOAD_ANIM_NONE, 500, 0, &ui_Main_screen_init);
-          return;
-        }
+        log_i("Connected");
+        _ui_screen_change(&ui_Main, LV_SCR_LOAD_ANIM_NONE, 500, 0, &ui_Main_screen_init);
+        return;
       }
     }
 
-    //     lv_disp_load_scr(ui_Settings);
     _ui_screen_change(&ui_Settings, LV_SCR_LOAD_ANIM_NONE, 500, 0, &ui_Settings_screen_init);
   }
 
@@ -99,60 +180,31 @@ extern "C"
   {
     log_i("OnSettingsScreenLoaded");
 
-    Preferences preferences;
-    preferences.begin(PREFERENCES_NAMESPACE, true);
-
-    auto wifi_ssid = preferences.getString(PREFERENCE_WIFI_SSID);
-    auto wifi_password = preferences.getString(PREFERENCE_WIFI_PASSWORD);
+    settings nvram;
 
     std::list<std::string> ssids;
     // Make sure original ssid is at the top
-    if (wifi_ssid.length())
-      ssids.push_back(wifi_ssid.c_str());
+    if (!nvram.wifi_ssid_.isEmpty())
+      ssids.push_back(nvram.wifi_ssid_.c_str());
 
-    auto num_networks = WiFi.scanNetworks();
-    if (num_networks)
-    {
-      auto scan_info = (wifi_ap_record_t *)WiFi.getScanInfoByIndex(0);
-      std::vector<wifi_ap_record_t> networks(scan_info, &scan_info[num_networks]);
-      // Sort by highest rssi
-      std::sort(networks.begin(), networks.end(), [&](const wifi_ap_record_t &e1, const wifi_ap_record_t &e2)
-                { return e1.rssi > e2.rssi; });
-
-      // Remove duplicates
-      for (const auto &network : networks)
-      {
-        std::string ssid((const char *)network.ssid, sizeof(wifi_ap_record_t::ssid));
-        auto it = std::find_if(ssids.cbegin(), ssids.cend(), [&](const std::string &e)
-                               { return e == ssid; });
-        if (it == ssids.cend())
-          ssids.push_back(ssid);
-      }
-    }
-
+    // Do a network scan
+    auto access_points = wifi_scan();
     // Create options for dropdown
     std::string options;
-    for (const auto &it : ssids)
+    for (const auto &it : access_points)
     {
       if (!options.empty())
         options.append("\n");
 
-      options.append(it.c_str());
+      options.append(it.ssid_.c_str());
     }
 
-    log_i("options: %s", options.c_str());
     // WiFi
     lv_dropdown_set_options(ui_WifiSsidDropdown, options.c_str());
-    lv_textarea_set_text(ui_WifiPasswordTextArea, wifi_password.c_str());
-
-    auto location_city = preferences.getString(PREFERENCE_LOCATION_CITY);
-    lv_textarea_set_text(ui_LocationSearchTextArea, location_city.c_str());
-
-    auto settings_range = preferences.getUInt(PREFERENCE_SETTINGS_RANGE);
-    lv_slider_set_value(ui_SettingsRangeSlider, settings_range, LV_ANIM_OFF);
-
-    auto settings_imperial = preferences.getBool(PREFERENCE_SETTINGS_IMPERIAL);
-    settings_imperial ? lv_obj_add_state(ui_SettingsImperialSwitch, LV_STATE_CHECKED) : lv_obj_clear_state(ui_SettingsImperialSwitch, LV_STATE_CHECKED);
+    lv_textarea_set_text(ui_WifiPasswordTextArea, nvram.wifi_password_.c_str());
+    lv_textarea_set_text(ui_LocationSearchTextArea, nvram.location_city_.c_str());
+    lv_slider_set_value(ui_SettingsRangeSlider, nvram.settings_range_, LV_ANIM_OFF);
+    nvram.settings_imperial_units_ ? lv_obj_add_state(ui_SettingsImperialSwitch, LV_STATE_CHECKED) : lv_obj_clear_state(ui_SettingsImperialSwitch, LV_STATE_CHECKED);
   }
 
   void OnSettingsOkClicked(lv_event_t *e)
@@ -162,28 +214,14 @@ extern "C"
     WiFi.setAutoConnect(false);
     WiFi.disconnect();
 
-    Preferences preferences;
-    preferences.begin(PREFERENCES_NAMESPACE, false);
-
-    // WiFi
-    char wifi_ssid[64];
-    lv_dropdown_get_selected_str(ui_WifiSsidDropdown, wifi_ssid, sizeof(wifi_ssid));
-    preferences.putString(PREFERENCE_WIFI_SSID, wifi_ssid);
-    log_i("Preference saved " PREFERENCE_WIFI_SSID ": %s", wifi_ssid);
-    auto wifi_password = lv_textarea_get_text(ui_WifiPasswordTextArea);
-    preferences.putString(PREFERENCE_WIFI_PASSWORD, wifi_password);
-    log_i("Preference saved " PREFERENCE_WIFI_PASSWORD ": %s", wifi_password);
-    // Location
-    auto location_city = lv_textarea_get_text(ui_LocationSearchTextArea);
-    preferences.putString(PREFERENCE_LOCATION_CITY, location_city);
-    log_i("Preference saved " PREFERENCE_LOCATION_CITY ": %s", location_city);
-    // Settings
-    auto settings_range = lv_slider_get_value(ui_SettingsRangeSlider);
-    preferences.putUInt(PREFERENCE_SETTINGS_RANGE, settings_range);
-    log_i("Preference saved " PREFERENCE_SETTINGS_RANGE ": %d", settings_range);
-    auto settings_imperial = (lv_obj_get_state(ui_SettingsImperialSwitch) & LV_STATE_CHECKED) > 0;
-    preferences.putBool(PREFERENCE_SETTINGS_IMPERIAL, settings_imperial);
-    log_i("Preference saved " PREFERENCE_SETTINGS_IMPERIAL ": %d", settings_imperial);
+    settings settings(true);
+    char buf[sizeof(wifi_ap_config_t::ssid) + 1];
+    lv_dropdown_get_selected_str(ui_WifiSsidDropdown, buf, sizeof(buf));
+    settings.wifi_ssid_ = buf;
+    settings.wifi_password_ = lv_textarea_get_text(ui_WifiPasswordTextArea);
+    settings.location_city_ = lv_textarea_get_text(ui_LocationSearchTextArea);
+    settings.settings_range_ = lv_slider_get_value(ui_SettingsRangeSlider);
+    settings.settings_imperial_units_ = (lv_obj_get_state(ui_SettingsImperialSwitch) & LV_STATE_CHECKED) > 0;
 
     _ui_screen_change(&ui_Spash, LV_SCR_LOAD_ANIM_NONE, 500, 0, &ui_Spash_screen_init);
   }
@@ -193,13 +231,9 @@ extern "C"
     // Get value
     auto value = lv_textarea_get_text(ui_LocationSearchTextArea);
     log_i("Value: %s", value);
-    city_t key{.name = value};
-    // Search case insensitive for the city
-    auto city = (city_t *)std::bsearch(&key, &cities, sizeof(cities) / sizeof(city_t), sizeof(city_t), [](const void *e1, const void *e2)
-                                       { return strcasecmp(((city_t *)e1)->name, ((city_t *)e2)->name); });
+    auto city = settings::lookup_city(value);
     if (city)
     {
-      log_i("Found city: %s", city->name);
       auto cityFound = String(city->name) + " (" + String(countries[city->country].name) + ")";
       lv_label_set_text(ui_LocationFoundValueLabel, cityFound.c_str());
       auto latlong = format_gps_location(city->latitude, city->longitude);

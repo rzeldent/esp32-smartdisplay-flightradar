@@ -61,9 +61,19 @@ lv_obj_t * ui_Keyboard2;
 // SCREEN: ui_Main
 void ui_Main_screen_init(void);
 lv_obj_t * ui_Main;
-lv_obj_t * ui_FlightLabel;
 lv_obj_t * ui_Flight;
-lv_obj_t * ui_Button2;
+lv_obj_t * ui_Altitude;
+lv_obj_t * ui_VerticalSpeed;
+lv_obj_t * ui_GroundSpeed;
+lv_obj_t * ui_LatLon;
+lv_obj_t * ui_Heading;
+lv_obj_t * ui_Registration;
+lv_obj_t * ui_AircraftType;
+lv_obj_t * ui_Airline;
+lv_obj_t * ui_Origin;
+lv_obj_t * ui_Destination;
+void ui_event_SettingsButton(lv_event_t * e);
+lv_obj_t * ui_SettingsButton;
 void ui_event_Label3(lv_event_t * e);
 lv_obj_t * ui_Label3;
 
@@ -179,6 +189,14 @@ void ui_event_Keyboard2(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_DEFOCUSED) {
         _ui_flag_modify(ui_Keyboard2, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+    }
+}
+void ui_event_SettingsButton(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        _ui_screen_change(&ui_Settings, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_Settings_screen_init);
     }
 }
 void ui_event_Label3(lv_event_t * e)

@@ -7,6 +7,21 @@
 #define FT_TO_M 0.3048
 #define KTS_TO_KMH 1.852f
 
+// One degree is 110.567 km (69.091 miles)
+#define DEGREES_TO_KM 110.567
+#define DEGREES_TO_MI 69.091
+
+struct location_info
+{
+    float latitude_min_;
+    float latitude_max_;
+    float longitude_min_;
+    float longitude_max_;
+
+    location_info();
+    location_info(float latitude, float longitude, ushort range, bool imperial);
+};
+
 struct flight_info
 {
     String icao_address;             //  0 => ICAO 24BIT ADDRESS - 4CA853
@@ -39,4 +54,4 @@ struct flight_info
     bool squawk_emergency() const { return squawk == "7700"; }
 };
 
-bool get_flights(float latitude, float longitude, float range_latitude, float range_longitude, bool air, bool ground, bool gliders, bool vehicles, std::list<flight_info> &flights, String &error_message);
+std::list<flight_info> get_flights(const location_info &location, bool air, bool ground, bool gliders, bool vehicles);

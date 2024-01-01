@@ -49,7 +49,7 @@ void ui_Settings_screen_init(void)
     lv_obj_set_y(ui_WifiPasswordTextArea, 35);
     lv_obj_set_align(ui_WifiPasswordTextArea, LV_ALIGN_TOP_RIGHT);
     lv_textarea_set_max_length(ui_WifiPasswordTextArea, 63);
-    lv_textarea_set_placeholder_text(ui_WifiPasswordTextArea, "Placeholder...");
+    lv_textarea_set_placeholder_text(ui_WifiPasswordTextArea, "Enter password");
     lv_textarea_set_one_line(ui_WifiPasswordTextArea, true);
     lv_textarea_set_password_mode(ui_WifiPasswordTextArea, true);
 

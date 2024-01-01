@@ -10,32 +10,95 @@ void ui_Main_screen_init(void)
     ui_Main = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_Main, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_FlightLabel = lv_label_create(ui_Main);
-    lv_obj_set_width(ui_FlightLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_FlightLabel, LV_SIZE_CONTENT);    /// 1
-    lv_label_set_text(ui_FlightLabel, "Flight");
-    lv_obj_set_style_text_color(ui_FlightLabel, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_FlightLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     ui_Flight = lv_label_create(ui_Main);
     lv_obj_set_width(ui_Flight, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Flight, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Flight, 0);
-    lv_obj_set_y(ui_Flight, 20);
+    lv_obj_set_x(ui_Flight, 1);
+    lv_obj_set_y(ui_Flight, 5);
+    lv_label_set_text(ui_Flight, "Flight");
 
-    ui_Button2 = lv_btn_create(ui_Main);
-    lv_obj_set_width(ui_Button2, 100);
-    lv_obj_set_height(ui_Button2, 50);
-    lv_obj_set_align(ui_Button2, LV_ALIGN_BOTTOM_MID);
-    lv_obj_add_flag(ui_Button2, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_Button2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    ui_Altitude = lv_label_create(ui_Main);
+    lv_obj_set_width(ui_Altitude, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Altitude, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Altitude, -139);
+    lv_obj_set_y(ui_Altitude, -45);
+    lv_obj_set_align(ui_Altitude, LV_ALIGN_CENTER);
 
-    ui_Label3 = lv_label_create(ui_Button2);
+    ui_VerticalSpeed = lv_label_create(ui_Main);
+    lv_obj_set_width(ui_VerticalSpeed, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_VerticalSpeed, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_VerticalSpeed, -49);
+    lv_obj_set_y(ui_VerticalSpeed, -43);
+    lv_obj_set_align(ui_VerticalSpeed, LV_ALIGN_CENTER);
+
+    ui_GroundSpeed = lv_label_create(ui_Main);
+    lv_obj_set_width(ui_GroundSpeed, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_GroundSpeed, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_GroundSpeed, -138);
+    lv_obj_set_y(ui_GroundSpeed, -20);
+    lv_obj_set_align(ui_GroundSpeed, LV_ALIGN_CENTER);
+
+    ui_LatLon = lv_label_create(ui_Main);
+    lv_obj_set_width(ui_LatLon, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_LatLon, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_LatLon, 57);
+    lv_obj_set_y(ui_LatLon, -41);
+    lv_obj_set_align(ui_LatLon, LV_ALIGN_CENTER);
+
+    ui_Heading = lv_label_create(ui_Main);
+    lv_obj_set_width(ui_Heading, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Heading, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Heading, 141);
+    lv_obj_set_y(ui_Heading, -39);
+    lv_obj_set_align(ui_Heading, LV_ALIGN_CENTER);
+
+    ui_Registration = lv_label_create(ui_Main);
+    lv_obj_set_width(ui_Registration, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Registration, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Registration, -41);
+    lv_obj_set_y(ui_Registration, -16);
+    lv_obj_set_align(ui_Registration, LV_ALIGN_CENTER);
+
+    ui_AircraftType = lv_label_create(ui_Main);
+    lv_obj_set_width(ui_AircraftType, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_AircraftType, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_AircraftType, 38);
+    lv_obj_set_y(ui_AircraftType, -13);
+    lv_obj_set_align(ui_AircraftType, LV_ALIGN_CENTER);
+
+    ui_Airline = lv_label_create(ui_Main);
+    lv_obj_set_width(ui_Airline, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Airline, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Airline, LV_ALIGN_CENTER);
+
+    ui_Origin = lv_label_create(ui_Main);
+    lv_obj_set_width(ui_Origin, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Origin, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Origin, -140);
+    lv_obj_set_y(ui_Origin, 25);
+    lv_obj_set_align(ui_Origin, LV_ALIGN_CENTER);
+
+    ui_Destination = lv_label_create(ui_Main);
+    lv_obj_set_width(ui_Destination, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Destination, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Destination, -138);
+    lv_obj_set_y(ui_Destination, 51);
+    lv_obj_set_align(ui_Destination, LV_ALIGN_CENTER);
+
+    ui_SettingsButton = lv_btn_create(ui_Main);
+    lv_obj_set_width(ui_SettingsButton, 100);
+    lv_obj_set_height(ui_SettingsButton, 50);
+    lv_obj_set_align(ui_SettingsButton, LV_ALIGN_BOTTOM_MID);
+    lv_obj_add_flag(ui_SettingsButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_SettingsButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label3 = lv_label_create(ui_SettingsButton);
     lv_obj_set_width(ui_Label3, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label3, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label3, "Settings");
 
     lv_obj_add_event_cb(ui_Label3, ui_event_Label3, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_SettingsButton, ui_event_SettingsButton, LV_EVENT_ALL, NULL);
 
 }

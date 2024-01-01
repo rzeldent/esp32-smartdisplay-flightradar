@@ -2,10 +2,29 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 
-std::list<flight_info> get_flights(float latitude, float longitude, float range_latitude, float range_longitude, bool air, bool ground, bool gliders, bool vehicles)
+location_info::location_info()
+{
+    latitude_min_ = 0.0;
+    latitude_max_ = 0.0;
+    longitude_min_ = 0.0;
+    longitude_max_ = 0.0;
+}
+
+location_info::location_info(float latitude, float longitude, ushort range, bool imperial)
+{
+    auto degrees = imperial ? range / DEGREES_TO_MI : range / DEGREES_TO_KM;
+    latitude_min_ = latitude - degrees / 2.0;
+    latitude_max_ = latitude + degrees / 2.0;
+    longitude_min_ = longitude - degrees / 2.0;
+    longitude_max_ = longitude + degrees / 2.0;
+
+    log_i("lat_min: %f, lat_max: %f, lon_min: %f, lon_max: %f", latitude_min_, latitude_max_, longitude_min_, longitude_max_);
+}
+
+std::list<flight_info> get_flights(const location_info &location, bool air, bool ground, bool gliders, bool vehicles)
 {
     const String flight_data_base_url = "http://data-cloud.flightradar24.com/zones/fcgi/feed.js";
-    const String bounds = String(latitude + range_latitude / 2.0) + "," + String(latitude - range_latitude / 2.0) + "," + String(longitude - range_longitude / 2.0) + "," + String(longitude + range_longitude / 2.0);
+    const String bounds = String(location.latitude_max_) + "," + String(location.latitude_min_) + "," + String(location.longitude_min_) + "," + String(location.longitude_max_);
     const String flight_data_url = flight_data_base_url + "?" + "bounds=" + bounds + "&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=" + String(ground) + "&air=" + String(air) + "&vehicles=" + String(vehicles) + "&estimated=1&maxage=14400&gliders=" + String(gliders) + "&stats=0";
 
     HTTPClient client;
