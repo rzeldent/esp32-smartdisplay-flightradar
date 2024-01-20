@@ -46,7 +46,7 @@ std::list<flight_info> get_flights(const location_info &location, bool air, bool
     auto response = client.getString();
     log_d("Body=%s", response.c_str());
     // Parse JSON states object 32k
-    DynamicJsonDocument doc_flight_data(32 * 1024);
+    JsonDocument doc_flight_data;
     const auto error = deserializeJson(doc_flight_data, response);
     if (error != DeserializationError::Ok)
     {
@@ -58,14 +58,14 @@ std::list<flight_info> get_flights(const location_info &location, bool air, bool
     client.end();
 
     std::list<flight_info> flights;
-    auto flight_data_root = doc_flight_data.as<JsonObject>();
+    auto flight_data_root = doc_flight_data.as<JsonObjectConst>();
     for (const auto &kvp : flight_data_root)
     {
-        if (!kvp.value().is<JsonArray>())
+        auto items = kvp.value().as<JsonArrayConst>();
+        if (items == nullptr)
             continue;
 
-        log_i("KVP=%s", kvp.key().c_str());
-        auto items = kvp.value().as<JsonArray>();
+        log_i("KVP=%s", kvp.key());
         struct flight_info flight
         {
             .icao_address = items[0].as<const char *>(),

@@ -57,10 +57,7 @@ bool settings::isValid()
 
 city_t *settings::lookup_city(const char *location)
 {
-    city_t key{.name = location};
-    // Search case insensitive for the city
-    auto city = (city_t *)std::bsearch(&key, &cities, sizeof(cities) / sizeof(city_t), sizeof(city_t), [](const void *e1, const void *e2)
-                                       { return strcasecmp(((city_t *)e1)->name, ((city_t *)e2)->name); });
+    auto city = lookup_city(location);
     log_i("City found: %s", city ? city->name : "<none>");
     return city;
 }
